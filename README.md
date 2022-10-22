@@ -13,6 +13,8 @@
 
 This repository contains an example of how to use [Tekton](https://tekton.dev) to create a CI/CD pipeline that builds and deploys an [App Connect Enterprise](https://www.ibm.com/docs/en/app-connect/containers_cd) application to [Red Hat OpenShift](https://www.ibm.com/cloud/openshift).
 
+![animated gif](./screenshots/complex-pipeline.gif)
+
 This pipeline uses the [IBM App Connect Operator](https://www.ibm.com/docs/en/app-connect/containers_cd?topic=operator-from-openshift-web-console) to easily build, deploy and manage your applications in containers. The pipeline runs on OpenShift to allow it to easily be integrated into an automated [continuous delivery workflow](https://www.ibm.com/garage/method/practices/deliver/practice_continuous_delivery/) without needing to build anything locally from a developer's workstation.
 
 > For background information about the Operator, and the different resources that this pipeline will create (e.g. `IntegrationServer` and `Configuration`), see these blog posts:
