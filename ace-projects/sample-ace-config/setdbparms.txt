@@ -1,0 +1,7 @@
+kafka::es-creds              appconnect-kafka-user            TEMPLATE_KAFKA_ES_PASSWORD
+
+truststore::es-truststore    notused                          TEMPLATE_TRUSTSTORE_PASSWORD
+
+loopback::postgres-creds     TEMPLATE_POSTGRES_USERNAME       TEMPLATE_POSTGRES_PASSWORD
+
+

@@ -1,0 +1,496 @@
+#
+# Tekton pipeline for deploying App Connect Enterprise integration servers
+#
+#  This will:
+#   - create supporting configuration objects, containing connection
+#         info, credentials, truststores, etc.
+#   - compile the App Connect application into a bar file, including
+#         a supporting Java project if needed
+#   - deploy the application to an integration server in OpenShift
+#
+
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: pipeline-ace-integration-server
+spec:
+  workspaces:
+    - name: pipeline-shared-workspace
+
+  params:
+    # ########################################################
+    # where to run the App Connect application
+    # ########################################################
+    - name: integration-server-name
+      description: Name of the IntegrationServer to create
+
+    - name: ace-namespace
+      type: string
+      description: |+
+        Namespace to deploy the App Connect Enterprise resources to.
+        There needs to be an App Connect operator watching this namespace
+
+
+    # ########################################################
+    # where to find the projects to create
+    # ########################################################
+
+    - name: git-repository
+      type: string
+      description: |+
+        URL for the git repository containing the App Connect project to
+        deploy. If credentials are required, these should be available in
+        a secret annotated with the git hostname.
+
+    - name: ace-project-name
+      description: |+
+        Name of the App Connect project to deploy.
+        This should be the name of a folder in ace-projects in the
+        git-repository being cloned.
+
+
+    # ########################################################
+    #
+    # files in the git repository that need to be updated
+    #
+    # Each string in the array should contain a space-separated list of
+    #  strings that looks like this:
+    #    file-to-update value-to-update key secret namespace
+    #
+    # where:
+    #   file-to-update   - relative location of the template file to be updated
+    #   value-to-update  - the value in the template file that should be replaced
+    #   key              - which value to retrieve from a secret to replace the template value with
+    #   secret           - name of the secret to retrieve value from
+    #   namespace        - namespace of the secret to retrieve value from
+    #
+    # ########################################################
+
+    - name: credentials-to-update
+      type: array
+      default:
+        - ""
+
+    # ########################################################
+    # optional supporting resources to deploy
+    # ########################################################
+
+    # Java project
+    - name: java-project-name
+      default: ""
+      description: |+
+        Name of Java project containing implementations of Java Compute nodes.
+        This should be the name of a folder in ace-projects in the
+        git-repository being cloned.
+        Leave as an empty string if there is no Java project needed in the
+        application.
+
+    # setdbparms.txt file
+    - name: setdbparms-file
+      default: ""
+      description: |+
+        Location of a setdbparms.txt file to include in the project.
+        This should be the location of a file in ace-projects in the
+        git-repository being cloned.
+        Leave as an empty string if there are no credentials needed in the
+        application.
+    - name: setdbparms-name
+      default: ""
+      description: |+
+        Name to give to the setdbparms.txt file when deployed to OpenShift.
+        Leave as an empty string if there are no credentials needed in the
+        application.
+
+    # server.conf.yaml
+    - name: serverconf-file
+      default: ""
+      description: |+
+        Location of a server.conf.yaml file to include in the project.
+        This should be the location of a file in ace-projects in the
+        git-repository being cloned.
+        Leave as an empty string if no custom configuration is needed in the
+        application.
+    - name: serverconf-name
+      default: ""
+      description: |+
+        Name to give to the server.conf.yaml file when deployed to OpenShift.
+        Leave as an empty string if no custom configuration is needed in the
+        application.
+
+    # Policy project
+    - name: policies-project-folder
+      default: ""
+      description: |+
+        Location of a project containing App Connect policies.
+        This should be the name of a folder in ace-projects in the
+        git-repository being cloned.
+        Leave as an empty string if there are no policies needed in the
+        application.
+    - name: policies-project-name
+      default: ""
+      description: |+
+        Name to give to the policy project when deployed to OpenShift.
+        Leave as an empty string if there are no policies needed in the
+        application.
+
+    # Loopback data sources
+    - name: datasources-project-folder
+      default: ""
+      description: |+
+        Location of a project containing Loopback data sources.
+        This should be the name of a folder in ace-projects in the
+        git-repository being cloned.
+        Leave as an empty string if there are no data sources needed in the
+        application.
+    - name: datasources-project-name
+      default: ""
+      description: |+
+        Name to give to the data sources project when deployed to OpenShift.
+        Leave as an empty string if there are no data sources needed in the
+        application.
+
+    # truststore file
+    - name: truststore-p12-secret
+      default: ""
+      description: |+
+        Name of a secret containing a pkcs12 file to use as
+        the basis for a truststore for App Connect.
+        Leave as an empty string if no truststore is needed.
+    - name: truststore-p12-secret-namespace
+      default: ""
+      description: |+
+        Namespace for a secret containing a pkcs12 file to use as
+        the basis for a truststore for App Connect.
+        Leave as an empty string if no truststore is needed.
+    - name: truststore-p12-secret-key
+      default: "ca.p12"
+      description: Key of the secret containing the pkcs12 file.
+    - name: truststore-p12-secret-password
+      default: "ca.password"
+      description: Key of the secret containing the pkcs12 password.
+    - name: truststore-name
+      default: ""
+      description: |+
+        Name to give to the truststore created when deployed to OpenShift.
+        Leave as an empty string if no truststore is needed.
+
+
+    # ########################################################
+    # App Connect options
+    #
+    #  For details of other values that can be used for these
+    #   parameters, check https://www.ibm.com/docs/en/app-connect/containers_cd?topic=obtaining-app-connect-enterprise-server-image-from-cloud-container-registry
+    #
+    # ########################################################
+
+    - name: app-connect-enterprise-version
+      default: "12.0.5.0-r4"
+    - name: app-connect-enterprise-license
+      default: "L-KSBM-CJ2KWU"
+    - name: app-connect-enterprise-base-image
+      default: "cp.icr.io/cp/appc/ace-server-prod@sha256:473bbea96e65025c11c91014ac8dd72641212bd2f5f35d661dca7b3242f4155c"
+
+    # ########################################################
+
+  tasks:
+
+    # --------------------------------------------------------
+
+    - name: clone-source
+      taskRef:
+        name: git-clone-home
+      params:
+        - name: url
+          value: "$(params.git-repository)"
+      workspaces:
+        - name: output
+          workspace: pipeline-shared-workspace
+
+
+    # --------------------------------------------------------
+
+    - name: bar-file
+      taskRef:
+        name: ace-create-bar-file
+      params:
+        - name: ace-project-name
+          value: "$(params.ace-project-name)"
+        - name: java-project-name
+          value: "$(params.java-project-name)"
+      runAfter:
+        # need the git repository to be able to
+        #  compile the project into a bar file
+        - clone-source
+      workspaces:
+        - name: output
+          workspace: pipeline-shared-workspace
+
+
+    # --------------------------------------------------------
+
+    - name: update-templates
+      taskRef:
+        name: ace-update-templates-from-secrets
+      params:
+        - name: credentials
+          value: ["$(params.credentials-to-update[*])"]
+      runAfter:
+        - clone-source
+      workspaces:
+        - name: output
+          workspace: pipeline-shared-workspace
+
+
+    # --------------------------------------------------------
+
+    - name: p12
+      taskRef:
+        name: read-secret
+      params:
+        - name: name
+          value: "$(params.truststore-p12-secret)"
+        - name: namespace
+          value: "$(params.truststore-p12-secret-namespace)"
+        - name: key
+          value: "$(params.truststore-p12-secret-key)"
+      when:
+        - input: "$(params.truststore-p12-secret)"
+          operator: notin
+          values:
+            - ""
+        - input: "$(params.truststore-p12-secret-namespace)"
+          operator: notin
+          values:
+            - ""
+      runAfter:
+        # we don't need anything from the cloned
+        #  git repo, but doing this after it is
+        #  cloned prevents the git clone overwriting
+        #  the file we create
+        - clone-source
+      workspaces:
+        - name: output
+          workspace: pipeline-shared-workspace
+
+    - name: p12-password
+      taskRef:
+        name: read-secret
+      params:
+        - name: name
+          value: "$(params.truststore-p12-secret)"
+        - name: namespace
+          value: "$(params.truststore-p12-secret-namespace)"
+        - name: key
+          value: "$(params.truststore-p12-secret-password)"
+      when:
+        - input: "$(params.truststore-p12-secret)"
+          operator: notin
+          values:
+            - ""
+        - input: "$(params.truststore-p12-secret-namespace)"
+          operator: notin
+          values:
+            - ""
+      runAfter:
+        # we don't need anything from the cloned
+        #  git repo, but doing this after it is
+        #  cloned prevents the git clone overwriting
+        #  the file we create
+        - clone-source
+      workspaces:
+        - name: output
+          workspace: pipeline-shared-workspace
+
+    - name: jks
+      taskRef:
+        name: convert-p12-to-jks
+      params:
+        - name: p12-file
+          value: "$(tasks.p12.results.file)"
+        - name: password
+          value: "$(tasks.p12-password.results.value)"
+      runAfter:
+        - p12
+        - p12-password
+      workspaces:
+        - name: output
+          workspace: pipeline-shared-workspace
+
+
+    # --------------------------------------------------------
+
+    - name: data-source
+      taskRef:
+        name: ace-create-datasource
+      params:
+        - name: ace-namespace
+          value: "$(params.ace-namespace)"
+        - name: datasources-project-template
+          value: "$(params.datasources-project-folder)"
+        - name: datasources-name
+          value: "$(params.datasources-project-name)"
+      when:
+        - input: "$(params.datasources-project-folder)"
+          operator: notin
+          values:
+            - ""
+        - input: "$(params.datasources-project-name)"
+          operator: notin
+          values:
+            - ""
+      runAfter:
+        - update-templates
+      workspaces:
+        - name: output
+          workspace: pipeline-shared-workspace
+
+
+    - name: policies
+      taskRef:
+        name: ace-create-policy-project
+      params:
+        - name: ace-namespace
+          value: "$(params.ace-namespace)"
+        - name: policies-project-folder
+          value: "$(params.policies-project-folder)"
+        - name: policies-name
+          value: "$(params.policies-project-name)"
+      when:
+        - input: "$(params.policies-project-folder)"
+          operator: notin
+          values:
+            - ""
+        - input: "$(params.policies-project-name)"
+          operator: notin
+          values:
+            - ""
+      runAfter:
+        - update-templates
+      workspaces:
+        - name: output
+          workspace: pipeline-shared-workspace
+
+
+    - name: setdbparms
+      taskRef:
+        name: ace-create-configuration
+      params:
+        - name: ace-namespace
+          value: "$(params.ace-namespace)"
+        - name: config-file
+          value: "$(params.setdbparms-file)"
+        - name: config-type
+          value: "setdbparms"
+        - name: config-name
+          value: "$(params.setdbparms-name)"
+      when:
+        - input: "$(params.setdbparms-file)"
+          operator: notin
+          values:
+            - ""
+        - input: "$(params.setdbparms-name)"
+          operator: notin
+          values:
+            - ""
+      runAfter:
+        - update-templates
+      workspaces:
+        - name: output
+          workspace: pipeline-shared-workspace
+
+
+    - name: serverconf
+      taskRef:
+        name: ace-create-configuration
+      params:
+        - name: ace-namespace
+          value: "$(params.ace-namespace)"
+        - name: config-file
+          value: "$(params.serverconf-file)"
+        - name: config-type
+          value: "serverconf"
+        - name: config-name
+          value: "$(params.serverconf-name)"
+      when:
+        - input: "$(params.serverconf-file)"
+          operator: notin
+          values:
+            - ""
+        - input: "$(params.serverconf-name)"
+          operator: notin
+          values:
+            - ""
+      runAfter:
+        - update-templates
+      workspaces:
+        - name: output
+          workspace: pipeline-shared-workspace
+
+
+    - name: truststore
+      taskRef:
+        name: ace-create-configuration
+      params:
+        - name: ace-namespace
+          value: "$(params.ace-namespace)"
+        - name: config-file
+          value: "$(tasks.jks.results.file)"
+        - name: config-type
+          value: "truststore"
+        - name: config-name
+          value: "$(params.truststore-name)"
+      runAfter:
+        - jks
+      workspaces:
+        - name: output
+          workspace: pipeline-shared-workspace
+
+    # --------------------------------------------------------
+
+  finally:
+
+    - name: integration-server
+      taskRef:
+        name: ace-create-integration-server
+      params:
+        # --------------------------------------------------------------
+        # details of the IntegrationServer to create
+        # --------------------------------------------------------------
+        - name: integration-name
+          value: "$(params.integration-server-name)"
+        - name: ace-namespace
+          value: "$(params.ace-namespace)"
+        # --------------------------------------------------------------
+        # what flavour of App Connect to run
+        # --------------------------------------------------------------
+        - name: ace-server-version
+          value: "$(params.app-connect-enterprise-version)"
+        - name: ace-server-license
+          value: "$(params.app-connect-enterprise-license)"
+        # --------------------------------------------------------------
+        # details of the Docker image that will be created to run the
+        #  integration server
+        # --------------------------------------------------------------
+        - name: ace-server-base-image
+          value: "$(params.app-connect-enterprise-base-image)"
+        - name: bar-file-location
+          value: "$(tasks.bar-file.results.folder)"
+        - name: integration-tag
+          value: "$(tasks.clone-source.results.commit)"
+        # --------------------------------------------------------------
+        #  configuration resources to add to the integration server
+        # --------------------------------------------------------------
+        # configurations to include
+        - name: policies-configuration
+          value: "$(params.policies-project-name)"
+        - name: datasource-configuration
+          value: "$(params.datasources-project-name)"
+        - name: setdbparms-configuration
+          value: "$(params.setdbparms-name)"
+        - name: serverconf-configuration
+          value: "$(params.serverconf-name)"
+        - name: truststore-configuration
+          value: "$(params.truststore-name)"
+      workspaces:
+        - name: output
+          workspace: pipeline-shared-workspace

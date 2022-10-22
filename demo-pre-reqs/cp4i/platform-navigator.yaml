@@ -1,0 +1,14 @@
+apiVersion: integration.ibm.com/v1beta1
+kind: PlatformNavigator
+metadata:
+  name: navigator
+  namespace: integration
+spec:
+  license:
+    accept: true
+    license: L-RJON-CD3JKX
+  mqDashboard: true
+  replicas: 1
+  storage:
+    class: ibmc-file-gold-gid
+  version: 2022.2.1

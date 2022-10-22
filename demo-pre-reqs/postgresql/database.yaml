@@ -1,0 +1,59 @@
+apiVersion: postgres-operator.crunchydata.com/v1beta1
+kind: PostgresCluster
+metadata:
+  name: store
+  namespace: postgresql
+spec:
+  port: 5432
+  databaseInitSQL:
+    name: pg-initial-data-cm
+    key: setup_data.sql
+  proxy:
+    pgBouncer:
+      port: 5432
+      replicas: 1
+  backups:
+    pgbackrest:
+      repos:
+      - name: repo1
+        volume:
+          volumeClaimSpec:
+            accessModes:
+            - "ReadWriteOnce"
+            resources:
+              requests:
+                storage: 1Gi
+  openshift: true
+  patroni:
+    leaderLeaseDurationSeconds: 30
+    port: 8008
+    syncPeriodSeconds: 10
+    dynamicConfiguration:
+      postgresql:
+        pg_hba:
+          - "hostnossl all all all md5"
+          - "host all all all md5"
+        parameters:
+          shared_preload_libraries: timescaledb
+  instances:
+    - dataVolumeClaimSpec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+      replicas: 1
+  postgresVersion: 13
+  users:
+    #
+    # credentials for use by ACE
+    - name: cp4i
+      databases:
+        - store
+      options: SUPERUSER
+    #
+    # credentials for interactive use
+    #  (e.g. when using PgAdmin)
+    - name: pgadmin
+      databases:
+        - store

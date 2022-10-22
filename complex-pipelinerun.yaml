@@ -1,0 +1,126 @@
+#
+# Sample pipelinerun for deploying an App Connect Enterprise integration server
+#
+# You need to modify this with details of your own App Connect application.
+#
+# This sample shows how to deploy an App Connect application with
+#  dependencies and additional configuration options.
+
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: ace-deploy-
+spec:
+  serviceAccountName: pipeline-deployer-serviceaccount
+  params:
+    # ########################################################
+    # where to run the App Connect application
+    # ########################################################
+    # what to call the IntegrationServer that runs your application
+    - name: integration-server-name
+      value: "my-ace-sample"
+    # where to run your application
+    - name: ace-namespace
+      value: "ace-demo"
+
+
+    # ########################################################
+    # where to find the projects to create
+    # ########################################################
+    # location of the git repository with your application
+    - name: git-repository
+      value: "https://github.com/dalelane/app-connect-tekton-pipeline"
+
+    # name of the App Connect project to deploy
+    #  This should be the name of a folder in ace-projects
+    - name: ace-project-name
+      value: "sample-ace-application"
+
+
+    # ########################################################
+    # credentials to use
+    #
+    # space-separated list of strings containing:
+    #    file-to-update value-to-update key secret namespace
+    #
+    # where:
+    #   file-to-update   - relative location of the template file to be updated
+    #   value-to-update  - the value in the template file that should be replaced
+    #   key              - which value to retrieve from a secret to replace the template value with
+    #   secret           - name of the secret to retrieve value from
+    #   namespace        - namespace of the secret to retrieve value from
+    #
+    # ########################################################
+    - name: credentials-to-update
+      value:
+        # update connection information for the Kafka cluster
+        - "sample-ace-policies/eventstreams.policyxml TEMPLATE_BOOTSTRAP_SERVER    bootstrap-server kafka-connection-info          eventstreams"
+        - "sample-ace-policies/eventstreams.policyxml TEMPLATE_TRUSTSTORE_FILE     truststore-name  kafka-connection-info          eventstreams"
+        # update credentials for connecting to Kafka
+        - "sample-ace-config/setdbparms.txt           TEMPLATE_KAFKA_ES_PASSWORD   password         appconnect-kafka-user          eventstreams"
+        - "sample-ace-config/setdbparms.txt           TEMPLATE_TRUSTSTORE_PASSWORD ca.password      event-backbone-cluster-ca-cert eventstreams"
+        # update connection information for the PostgreSQL database
+        - "sample-ace-data-sources/datasources.json   TEMPLATE_POSTGRES_HOST       host             store-pguser-cp4i              postgresql"
+        - "sample-ace-data-sources/datasources.json   TEMPLATE_POSTGRES_PORT       port             store-pguser-cp4i              postgresql"
+        - "sample-ace-data-sources/datasources.json   TEMPLATE_POSTGRES_DBNAME     dbname           store-pguser-cp4i              postgresql"
+        # update credentials for connecting to the PostgreSQL database
+        - "sample-ace-config/setdbparms.txt           TEMPLATE_POSTGRES_USERNAME   user             store-pguser-cp4i              postgresql"
+        - "sample-ace-config/setdbparms.txt           TEMPLATE_POSTGRES_PASSWORD   password         store-pguser-cp4i              postgresql"
+
+
+    # ########################################################
+    # optional supporting resources to deploy
+    # ########################################################
+
+    # Java project
+    - name: java-project-name
+      value: "sample-ace-application-java"
+
+    # setdbparms.txt
+    - name: setdbparms-file
+      value: "ace-projects/sample-ace-config/setdbparms.txt"
+    - name: setdbparms-name
+      value: "sample-setdbparms"
+
+    # server.conf.yaml
+    - name: serverconf-file
+      value: "ace-projects/sample-ace-config/server.conf.yaml"
+    - name: serverconf-name
+      value: "sample-serverconf"
+
+    # Policy project
+    - name: policies-project-folder
+      value: "ace-projects/sample-ace-policies"
+    - name: policies-project-name
+      value: "sample-policies"
+
+    # Loopback data sources
+    - name: datasources-project-folder
+      value: "ace-projects/sample-ace-data-sources"
+    - name: datasources-project-name
+      value: "sample-datasources"
+
+    # truststore file
+    - name: truststore-p12-secret
+      value: "event-backbone-cluster-ca-cert"
+    - name: truststore-p12-secret-namespace
+      value: "eventstreams"
+    - name: truststore-name
+      value: "sample-truststore.jks"
+
+
+
+  pipelineRef:
+    name: pipeline-ace-integration-server
+
+  workspaces:
+    - name: pipeline-shared-workspace
+      volumeClaimTemplate:
+        spec:
+          storageClassName: ibmc-block-gold
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 100Mi
+

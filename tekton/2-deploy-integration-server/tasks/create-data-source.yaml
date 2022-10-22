@@ -1,0 +1,72 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: ace-create-datasource
+spec:
+  params:
+    # --------------------------------------------------------------
+    #  where to create the configuration
+    # --------------------------------------------------------------
+    - name: datasources-name
+      description: name to give the created data sources resource
+    - name: ace-namespace
+      description: namespace where the Configuration resource should be created
+    # --------------------------------------------------------------
+    #  what to create
+    # --------------------------------------------------------------
+    - name: datasources-project-template
+      description: folder containing the template data sources project
+
+
+  workspaces:
+    - name: output
+      description: workspace with the data source project template
+
+
+  results:
+    - name: name
+      description: name of the created configuration object
+
+
+  steps:
+    - name: run
+      image: image-registry.openshift-image-registry.svc:5000/openshift/tools
+      script: |
+        #!/bin/sh
+
+        set -e
+
+        echo "getting zip executable from workspace"
+        ZIP="/workspace/output/resources/rhel-zip"
+
+        echo "identifying location of data sources template"
+        DATASOURCES_FOLDER="/workspace/output/$(params.datasources-project-template)"
+        echo $DATASOURCES_FOLDER
+        ls -l $DATASOURCES_FOLDER
+
+        echo "creating data sources zip file"
+        cd "$DATASOURCES_FOLDER"
+        $ZIP -r /tmp/datasources.zip *
+        ls -l /tmp/
+
+        echo "creating data sources Configuration spec"
+        cat >datasources.yaml <<EOL
+        apiVersion: appconnect.ibm.com/v1beta1
+        kind: Configuration
+        metadata:
+          name: $(params.datasources-name)
+          namespace: $(params.ace-namespace)
+        spec:
+          data: $(base64 /tmp/datasources.zip | tr -d '\n')
+          type: loopbackdatasource
+        EOL
+
+        echo "------------------------------------------------"
+        cat datasources.yaml
+        echo "------------------------------------------------"
+
+        echo "creating data sources Configuration"
+        oc apply -f datasources.yaml
+
+        echo "writing results for later tasks to reuse"
+        echo -n "$(params.datasources-name)" > $(results.name.path)

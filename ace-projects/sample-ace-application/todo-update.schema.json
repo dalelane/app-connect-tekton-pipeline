@@ -1,0 +1,42 @@
+{
+	"$schema": "https://json-schema.org/draft/2019-09/schema",
+	"$id": "https://jsonplaceholder.typicode.com/todos/update.json",
+	"type": "object",
+	"title": "To-do update notification",
+	"description": "A notification that a to-do item has been modified",
+	"required": [
+		"id"
+	],
+	"properties": {
+		"id": {
+			"title": "todo id",
+			"description": "The unique identifier for a to-do item that has been modified",
+			"type": "integer",
+			"examples": [
+				5
+			]
+		},
+		"message": {
+			"title": "notification description",
+			"description": "A free text description with background information about the modification",
+			"type": "string",
+			"default": "",
+			"examples": [
+				"set the completed state back to 'false' because it turns out I hadn't finished it after all"
+			]
+		}
+	},
+	"examples": [
+		{
+			"id": 1,
+			"message": "deleted this to-do item as it isn't needed any more"
+		},
+		{
+			"id": 2,
+			"message": "set completed to false as additional work is needed"
+		},
+		{
+			"id": 3
+		}
+	]
+}

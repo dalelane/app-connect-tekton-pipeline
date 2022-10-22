@@ -1,0 +1,9 @@
+
+
+CREATE COMPUTE MODULE say_hello_world
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		SET OutputRoot.JSON.Data.hello = 'world';
+		RETURN TRUE;
+	END;
+END MODULE;

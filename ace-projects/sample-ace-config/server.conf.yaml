@@ -1,0 +1,5 @@
+
+EnvironmentVariables:
+    # environment variable to add to the integration server when run
+    #  used in the Java class uk.co.dalelane.appconnect.demo.Base64EncodeTodoDescription
+    TODO_TITLE_PREFIX: 'ENCODED:'

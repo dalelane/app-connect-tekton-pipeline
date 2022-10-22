@@ -1,0 +1,9 @@
+kind: Secret
+apiVersion: v1
+type: Opaque
+metadata:
+  name: kafka-connection-info
+  namespace: eventstreams
+stringData:
+  bootstrap-server: event-backbone-kafka-bootstrap.eventstreams.svc:9093
+  truststore-name: sample-truststore.jks

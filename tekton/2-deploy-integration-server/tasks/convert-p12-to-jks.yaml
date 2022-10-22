@@ -1,0 +1,51 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: convert-p12-to-jks
+spec:
+  params:
+    - name: p12-file
+      description: pkcs12 file to convert
+    - name: password
+      description: password for the p12 file and to use for the JKS file to create
+
+
+  workspaces:
+    - name: output
+      description: workspace to write the jks to
+
+
+  results:
+    - name: file
+      description: location of JKS file created
+    - name: password
+      description: password of JKS file created
+
+
+  steps:
+    - name: run-java
+      image: openjdk:11
+      script: |
+        #!/bin/sh
+
+        set -e
+
+        echo "location of pkcs12 file to convert"
+        ls -l $(params.p12-file)
+
+        echo "location of jks file to create"
+        JKS_FILE="$(params.p12-file).jks"
+        echo $JKS_FILE
+
+        echo "password to use"
+        echo "$(params.password)"
+
+        keytool -importkeystore \
+          -srckeystore  $(params.p12-file) -srcstoretype pkcs12 \
+          -srcstorepass $(params.password) \
+          -destkeystore $JKS_FILE -deststoretype jks \
+          -deststorepass $(params.password)
+
+        echo "writing results for later tasks to reuse"
+        echo -n "$JKS_FILE" > $(results.file.path)
+        echo -n "$(params.password)" > $(results.password.path)

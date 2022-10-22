@@ -1,0 +1,19 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: pg-initial-data-cm
+  namespace: postgresql
+data:
+  setup_data.sql: |
+    /* switch database */
+    \c store
+    ALTER DEFAULT PRIVILEGES GRANT ALL ON TABLES TO pgadmin;
+    set schema 'public';
+
+    CREATE TABLE todos (
+        id INTEGER PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        title varchar(250) NOT NULL,
+        encoded_title varchar(500) NOT NULL,
+        is_completed boolean NOT NULL
+    );

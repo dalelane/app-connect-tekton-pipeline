@@ -1,0 +1,95 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: ace-update-templates-from-secrets
+spec:
+  params:
+    # files in the git repository that need to be updated
+    #
+    # Each string in the array should contain a space-separated list of
+    #  strings that looks like this:
+    #    file-to-update value-to-update key secret namespace
+    #
+    # where:
+    #   file-to-update   - relative location of the template file to be updated
+    #   value-to-update  - the value in the template file that should be replaced
+    #   key              - which value to retrieve from a secret to replace the template value with
+    #   secret           - name of the secret to retrieve value from
+    #   namespace        - namespace of the secret to retrieve value from
+    - name: credentials
+      type: array
+
+
+  workspaces:
+    - name: output
+      description: workspace with the templates to update
+
+  steps:
+    - name: run
+      image: image-registry.openshift-image-registry.svc:5000/openshift/tools
+
+      # expand the array of credentials provided from the pipeline
+      args: ["$(params.credentials[*])"]
+
+      script: |
+        #!/bin/sh
+
+        set -e
+
+        echo "checking if there is anything to do"
+        if [[ "$@" == "" ]]
+        then
+            echo "no credentials to update"
+            exit
+        fi
+
+        echo "identifying location of App Connect projects"
+        TEMPLATES_FOLDER="/workspace/output/ace-projects"
+        echo $TEMPLATES_FOLDER
+        ls -l $TEMPLATES_FOLDER
+
+        echo "applying modifications to the templates"
+        for credentialsinfo in "$@"
+        do
+            # split the line into an array
+            creditems=($credentialsinfo)
+
+            # name of the template file to modify
+            TEMPLATE_FILE=${creditems[0]}
+            # absolute location of the template file
+            TEMPLATE="$TEMPLATES_FOLDER/$TEMPLATE_FILE"
+
+            # the placeholder value we expect to see in the template file
+            PLACEHOLDER=${creditems[1]}
+
+            # which value in the secret to replace the placeholder value with
+            KEY=${creditems[2]}
+
+            # which secret to get the value from
+            SECRET_NAME=${creditems[3]}
+
+            # the namespace where the secret to get the value from is
+            SECRET_NAMESPACE=${creditems[4]}
+
+            # confirm the credentials have been read in correctly
+            echo "--------------------------------------------------"
+            echo "replacing:"
+            echo "   placeholder value $PLACEHOLDER "
+            echo "   in template file $TEMPLATE "
+            echo "   using the $KEY value "
+            echo "   from the secret $SECRET_NAME in namespace $SECRET_NAMESPACE"
+            echo ""
+
+            echo "retrieving value from the secret"
+            ESCAPED_KEY=$(echo $KEY | sed s/\\./'\\'./)
+            SECRET_VALUE=$(oc get secret -n $SECRET_NAMESPACE $SECRET_NAME -o jsonpath="{.data.$ESCAPED_KEY}" | base64 -d)
+
+            echo "editing template"
+            sed -i "s~$PLACEHOLDER~$SECRET_VALUE~g" "$TEMPLATE"
+
+            echo "updated template $TEMPLATE"
+            echo "=================================================="
+            cat "$TEMPLATE"
+            echo "=================================================="
+        done
+

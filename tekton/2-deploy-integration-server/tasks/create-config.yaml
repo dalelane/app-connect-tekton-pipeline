@@ -1,0 +1,74 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: ace-create-configuration
+spec:
+  params:
+    # --------------------------------------------------------------
+    #  where to create the configuration
+    # --------------------------------------------------------------
+    - name: config-name
+      description: name to give the created Configuration resource
+    - name: ace-namespace
+      description: namespace where the Configuration resource should be created
+    # --------------------------------------------------------------
+    #  what to create
+    # --------------------------------------------------------------
+    - name: config-file
+      description: file containing configuration to deploy
+    - name: config-type
+      description: type of configuration (e.g. setdbparms, serverconf, truststore etc.)
+
+
+  workspaces:
+    - name: output
+      description: workspace with the policy project template
+
+
+  results:
+    - name: name
+      description: name of the created configuration object
+
+
+  steps:
+    - name: run
+      image: image-registry.openshift-image-registry.svc:5000/openshift/tools
+      script: |
+        #!/bin/sh
+
+        set -e
+
+        echo "ensuring that the config file location is absolute"
+        PARENT_FOLDER="/workspace/output"
+        if [[ "$(params.config-file)" == $PARENT_FOLDER* ]]
+        then
+            CONFIG_FILE=$(params.config-file)
+        else
+            CONFIG_FILE="$PARENT_FOLDER/$(params.config-file)"
+        fi
+        echo $CONFIG_FILE
+
+        echo "confirming presence of configuration file"
+        ls -l $CONFIG_FILE
+
+        echo "creating Configuration spec"
+        cat >/tmp/configspec.yaml <<EOL
+        apiVersion: appconnect.ibm.com/v1beta1
+        kind: Configuration
+        metadata:
+            name: $(params.config-name)
+            namespace: $(params.ace-namespace)
+        spec:
+            data: $(base64 $CONFIG_FILE | tr -d '\n')
+            type: $(params.config-type)
+        EOL
+
+        echo "------------------------------------------------"
+        cat /tmp/configspec.yaml
+        echo "------------------------------------------------"
+
+        echo "applying Configuration spec"
+        oc apply -f /tmp/configspec.yaml
+
+        echo "writing results for later tasks to reuse"
+        echo -n "$CONFIG_FILE" > $(results.name.path)

@@ -1,0 +1,196 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: ace-create-integration-server
+spec:
+  params:
+    # --------------------------------------------------------------
+    # details of the IntegrationServer to create
+    # --------------------------------------------------------------
+    - name: integration-name
+      description: name to give the integration server name
+    - name: ace-namespace
+      description: namespace to create the IntegrationServer in
+    # --------------------------------------------------------------
+    # what flavour of App Connect to run
+    #  for details, see https://www.ibm.com/docs/en/app-connect/containers_cd?topic=obtaining-app-connect-enterprise-server-image-from-cloud-container-registry
+    # --------------------------------------------------------------
+    - name: ace-server-version
+      description: version of App Connect Enterprise to use
+    - name: ace-server-license
+      description: ID of the license to use for the IntegrationServer
+    # --------------------------------------------------------------
+    # details of the Docker image that will be created to run the
+    #  integration server
+    # --------------------------------------------------------------
+    - name: ace-server-base-image
+      description: |+
+        Docker image to use as a base for the server.
+        Example values for this can be found at
+        https://www.ibm.com/docs/en/app-connect/containers_cd?topic=obtaining-app-connect-enterprise-server-image-from-cloud-container-registry
+    - name: bar-file-location
+      description: folder containing an integration.bar file to deploy
+    - name: integration-tag
+      description: docker tag to use for the integration image
+    # --------------------------------------------------------------
+    # optional arguments
+    #   scaling and resource limits
+    # --------------------------------------------------------------
+    - name: cpu-limit
+      default: 2
+    - name: memory-limit
+      default: "1Gi"
+    - name: replicas
+      default: 1
+    # --------------------------------------------------------------
+    # optional arguments
+    #   Configuration resources that can be added to
+    #    the integration server
+    # --------------------------------------------------------------
+    - name: policies-configuration
+      description: name of the policies project to use
+      default: ""
+    - name: setdbparms-configuration
+      description: name of the setdbparms configuration object to use
+      default: ""
+    - name: datasource-configuration
+      description: name of the data source object to use
+      default: ""
+    - name: serverconf-configuration
+      description: name of the server.conf.yaml configuration object to use
+      default: ""
+    - name: truststore-configuration
+      description: name of the truststore configuration object to use
+      default: ""
+    # --------------------------------------------------------------
+
+  workspaces:
+    - name: output
+      description: workspace with the resources
+
+  steps:
+    - name: run
+      image: image-registry.openshift-image-registry.svc:5000/openshift/tools
+      script: |
+        #!/bin/sh
+
+        set -e
+
+        echo "creating base ACE imagestream"
+        oc apply -f - <<EOF
+        apiVersion: image.openshift.io/v1
+        kind: ImageStream
+        metadata:
+          name: ace-server-prod
+          namespace: $(params.ace-namespace)
+        EOF
+
+        echo "tagging with requested base image"
+        oc tag \
+          -n $(params.ace-namespace) \
+          $(params.ace-server-base-image) \
+          ace-server-prod:latest-amd64
+
+        echo "defining custom ACE imagestream"
+        oc apply -f - <<EOF
+        apiVersion: image.openshift.io/v1
+        kind: ImageStream
+        metadata:
+          name: $(params.integration-name)
+          namespace: $(params.ace-namespace)
+        EOF
+
+        echo "creating ACE image build configuration"
+        oc apply -f - <<EOF
+        apiVersion: build.openshift.io/v1
+        kind: BuildConfig
+        metadata:
+          name: $(params.integration-name)
+          namespace: $(params.ace-namespace)
+          labels:
+            name: $(params.integration-name)
+        spec:
+          triggers: []
+          source:
+            type: dockerfile
+            dockerfile: |
+              FROM ace-server-prod:latest-amd64
+              COPY integration.bar /home/aceuser/initial-config/bars/integration.bar
+          strategy:
+            type: Docker
+            dockerStrategy:
+              pullSecret:
+                name: ibm-entitlement-key
+              from:
+                kind: ImageStreamTag
+                name: "ace-server-prod:latest-amd64"
+                namespace: $(params.ace-namespace)
+          output:
+            to:
+              kind: ImageStreamTag
+              name: "$(params.integration-name):$(params.integration-tag)"
+              namespace: $(params.ace-namespace)
+        EOF
+
+        echo "starting custom image build"
+        cd $(params.bar-file-location)
+        ls -l
+        oc start-build $(params.integration-name) -n $(params.ace-namespace) --from-file ./integration.bar --wait=true
+
+        echo "preparing configuration list"
+        if [ -n "$(params.policies-configuration)" ]; then
+          POLICIES_CONFIG="- $(params.policies-configuration)"
+        fi
+        if [ -n "$(params.setdbparms-configuration)" ]; then
+          SETDBPARMS_CONFIG="- $(params.setdbparms-configuration)"
+        fi
+        if [ -n "$(params.datasource-configuration)" ]; then
+          DATASOURCE_CONFIG="- $(params.datasource-configuration)"
+        fi
+        if [ -n "$(params.serverconf-configuration)" ]; then
+          SERVERCONF_CONFIG="- $(params.serverconf-configuration)"
+        fi
+        if [ -n "$(params.truststore-configuration)" ]; then
+          TRUSTSTORE_CONFIG="- $(params.truststore-configuration)"
+        fi
+
+        echo "creating integration server"
+        oc apply -f - <<EOF
+        apiVersion: appconnect.ibm.com/v1beta1
+        kind: IntegrationServer
+        metadata:
+          name: $(params.integration-name)
+          namespace: $(params.ace-namespace)
+        spec:
+          pod:
+            containers:
+              runtime:
+                image: image-registry.openshift-image-registry.svc:5000/$(params.ace-namespace)/$(params.integration-name):$(params.integration-tag)
+                resources:
+                  limits:
+                    cpu: $(params.cpu-limit)
+                    memory: $(params.memory-limit)
+                  requests:
+                    cpu: $(params.cpu-limit)
+                    memory: $(params.memory-limit)
+          configurations:
+            $POLICIES_CONFIG
+            $SETDBPARMS_CONFIG
+            $DATASOURCE_CONFIG
+            $SERVERCONF_CONFIG
+            $TRUSTSTORE_CONFIG
+          adminServerSecure: true
+          createDashboardUsers: true
+          designerFlowsOperationMode: disabled
+          service:
+            endpointType: http
+          version: '$(params.ace-server-version)'
+          enableMetrics: false
+          license:
+            accept: true
+            license: $(params.ace-server-license)
+            use: CloudPakForIntegrationProduction
+          replicas: $(params.replicas)
+          router:
+            timeout: 120s
+        EOF

@@ -1,0 +1,49 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: pipeline-docker-build
+spec:
+  workspaces:
+    - name: pipeline-shared-workspace
+
+  params:
+    - name: dockerfile-url
+      type: string
+      description: location of the dockerfile to download and build
+    - name: image-name
+      type: string
+      description: name of the docker image to build
+
+  tasks:
+    - name: fetch-dockerfile
+      taskRef:
+        name: curl-to-workspace
+      params:
+        - name: url
+          value: $(params.dockerfile-url)
+        - name: output
+          value: "Dockerfile"
+      workspaces:
+        - name: output
+          workspace: pipeline-shared-workspace
+
+    - name: extend-dockerfile
+      taskRef:
+        name: extend-ace-dockerfile
+      runAfter:
+        - fetch-dockerfile
+      workspaces:
+        - name: source
+          workspace: pipeline-shared-workspace
+
+    - name: build-dockerfile
+      taskRef:
+        name: buildah
+      runAfter:
+        - extend-dockerfile
+      params:
+        - name: IMAGE
+          value: $(params.image-name)
+      workspaces:
+        - name: source
+          workspace: pipeline-shared-workspace

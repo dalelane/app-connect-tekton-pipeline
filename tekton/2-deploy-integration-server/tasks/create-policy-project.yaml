@@ -1,0 +1,74 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: ace-create-policy-project
+spec:
+  params:
+    # --------------------------------------------------------------
+    #  where to create the configuration
+    # --------------------------------------------------------------
+    - name: policies-name
+      description: name to give the created policy Configuration resource
+    - name: ace-namespace
+      description: namespace where the App Connect Operator is running
+    # --------------------------------------------------------------
+    #  what to create
+    # --------------------------------------------------------------
+    - name: policies-project-folder
+      description: folder containing the template policies project
+
+
+  workspaces:
+    - name: output
+      description: workspace with the policy project template
+
+
+  results:
+    - name: name
+      description: name of the created configuration object
+
+
+  steps:
+    - name: run
+      image: image-registry.openshift-image-registry.svc:5000/openshift/tools
+      script: |
+        #!/bin/sh
+
+        set -e
+
+        echo "getting zip executable from workspace"
+        ZIP="/workspace/output/resources/rhel-zip"
+
+        echo "identifying location of policy project"
+        POLICY_FOLDER="/workspace/output/$(params.policies-project-folder)"
+        echo $POLICY_FOLDER
+        ls -l $POLICY_FOLDER
+
+        echo "creating policy project zip file"
+        cd "$POLICY_FOLDER"
+        POLICY_NAME="$(basename $(pwd))"
+        cd ..
+        $ZIP -r /tmp/policies.zip ./$POLICY_NAME
+        ls -l /tmp/
+
+        echo "creating policy Configuration spec"
+        cat >/tmp/policiesproject.yaml <<EOL
+        apiVersion: appconnect.ibm.com/v1beta1
+        kind: Configuration
+        metadata:
+          name: $(params.policies-name)
+          namespace: $(params.ace-namespace)
+        spec:
+          data: $(base64 /tmp/policies.zip | tr -d '\n')
+          type: policyproject
+        EOL
+
+        echo "------------------------------------------------"
+        cat /tmp/policiesproject.yaml
+        echo "------------------------------------------------"
+
+        echo "creating policy Configuration"
+        oc apply -f /tmp/policiesproject.yaml
+
+        echo "writing results for later tasks to reuse"
+        echo -n "$(params.policies-name)" > $(results.name.path)

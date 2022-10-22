@@ -1,0 +1,19 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: pipeline-imagebuilder-ace-role
+rules:
+  - apiGroups:
+      - ""
+      - image.openshift.io
+    resources:
+      - imagestreams
+      - imagestreams/layers
+    verbs:
+      - get
+      - delete
+      - update
+      - create
+      - list
+      - patch
+      - watch

@@ -1,0 +1,69 @@
+{
+	"$schema": "https://json-schema.org/draft/2019-09/schema",
+	"$id": "https://jsonplaceholder.typicode.com/todos/item.json",
+	"type": "object",
+	"title": "To-do item",
+	"description": "Schema for stored todo items, based on the typicode REST API",
+	"required": [
+		"userId",
+		"id",
+		"title",
+		"completed"
+	],
+	"properties": {
+		"userId": {
+			"type": "integer",
+			"title": "user id",
+			"description": "The unique identifier for the user who owns the to-do item",
+			"examples": [
+				5
+			]
+		},
+		"id": {
+			"type": "integer",
+			"title": "todo item id",
+			"description": "The unique identifier for the to-do item",
+			"examples": [
+				100
+			]
+		},
+		"title": {
+			"type": "string",
+			"title": "todo item text",
+			"description": "A free-text description of the to-do item",
+			"examples": [
+				"excepturi a et neque qui expedita vel voluptate"
+			]
+		},
+		"completed": {
+			"type": "boolean",
+			"default": false,
+			"title": "is the todo item completed",
+			"description": "True if the to-do item has been completed, false if it is still pending",
+			"examples": [
+				true,
+				false
+			]
+		}
+	},
+	"examples": [
+		{
+			"userId": 1,
+			"id": 1,
+			"title": "delectus aut autem",
+			"completed": false
+		},
+		{
+			"userId": 3,
+			"id": 50,
+			"title": "cupiditate necessitatibus ullam aut quis dolor voluptate",
+			"completed": true
+		},
+		{
+			"userId": 5,
+			"id": 100,
+			"title": "excepturi a et neque qui expedita vel voluptate",
+			"completed": false
+		}
+	]
+}

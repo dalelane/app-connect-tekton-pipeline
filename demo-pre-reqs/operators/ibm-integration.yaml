@@ -1,0 +1,14 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  labels:
+    operators.coreos.com/ibm-integration-platform-navigator.openshift-operators: ''
+  name: ibm-integration-platform-navigator
+  namespace: openshift-operators
+spec:
+  channel: v6.0
+  installPlanApproval: Automatic
+  name: ibm-integration-platform-navigator
+  source: ibm-operator-catalog
+  sourceNamespace: openshift-marketplace
+  startingCSV: ibm-integration-platform-navigator.v6.0.3

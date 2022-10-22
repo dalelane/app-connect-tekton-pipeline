@@ -1,0 +1,14 @@
+apiVersion: eventstreams.ibm.com/v1beta2
+kind: KafkaTopic
+metadata:
+  labels:
+    eventstreams.ibm.com/cluster: event-backbone
+  name: todo.updates
+  namespace: eventstreams
+spec:
+  config:
+    min.insync.replicas: '1'
+    retention.ms: '604800000'
+  partitions: 1
+  replicas: 1
+  topicName: TODO.UPDATES

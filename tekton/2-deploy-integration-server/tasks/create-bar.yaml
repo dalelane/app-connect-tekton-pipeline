@@ -1,0 +1,83 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: ace-create-bar-file
+spec:
+
+  params:
+    - name: ace-project-name
+      description: name of the App Connect project to build the bar file for
+
+    - name: java-project-name
+      default: ""
+      description: |+
+        Name of a Java project with implementation of Java Compute nodes.
+        Leave this blank if no Java project is needed
+
+  results:
+    - name: folder
+      description: folder containing the created bar file
+    - name: file
+      description: name of the created bar file
+
+  workspaces:
+    - name: output
+      description: workspace with the ACE resources in
+
+  stepTemplate:
+    env:
+      - name: HOME
+        value: "/tekton/home"
+
+  steps:
+    - name: run-ace
+      image: image-registry.openshift-image-registry.svc:5000/pipeline-ace/ace-build-full:latest
+      env:
+        - name: LICENSE
+          value: accept
+      script: |
+        #!/bin/bash
+
+        set -e
+
+        echo "building a bar file for use with App Connect"
+
+        echo "starting dependencies for mqsicreatebar"
+        /usr/bin/Xvfb -ac :99 -nolisten unix &
+        export DISPLAY=:99
+
+        echo "preparing bar output location"
+        BAR_FOLDER="/workspace/output/bars"
+        mkdir -p $BAR_FOLDER
+
+        echo "confirming bar file location"
+        BAR_FILE="$BAR_FOLDER/integration.bar"
+        echo $BAR_FILE
+
+        echo "confirming workspace location"
+        ACE_PROJECTS_WORKSPACE="/workspace/output/ace-projects"
+        ls -l $ACE_PROJECTS_WORKSPACE
+
+        echo "checking Java project"
+        if [ -n "$(params.java-project-name)" ]; then
+          echo "$(params.java-project-name) needs to be built with the bar"
+          JAVA_BUILD_OPTION="-p $(params.java-project-name)"
+        else
+          echo "no Java dependencies needed"
+          JAVA_BUILD_OPTION=""
+        fi
+
+        echo "creating bar"
+        mqsicreatebar \
+          -data $ACE_PROJECTS_WORKSPACE \
+          -cleanBuild -deployAsSource \
+          -a $(params.ace-project-name) \
+          -b $BAR_FILE \
+          $JAVA_BUILD_OPTION
+
+        echo "checking bar"
+        ls -l $BAR_FILE
+
+        echo "writing results for later tasks to reuse"
+        echo -n "$BAR_FOLDER" > $(results.folder.path)
+        echo -n "integration.bar" > $(results.file.path)
