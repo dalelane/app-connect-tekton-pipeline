@@ -3,7 +3,7 @@
 **An example Tekton pipeline for deploying an IBM App Connect Enterprise application to Red Hat OpenShift.**
 
 - [Overview](#overview)
-- [Pipelines](#pipelines)
+- [Pipeline](#pipeline)
 - [Sample ACE apps](#sample-apps)
 - [Building your own app](#configuring-the-pipeline-for-your-app-connect-enterprise-application)
 - [Supported versions](#supported-versions)
@@ -22,59 +22,26 @@ This pipeline uses the [IBM App Connect Operator](https://www.ibm.com/docs/en/ap
 > - [Exploring the IntegrationServer Resource of the IBM App Connect Operator](https://community.ibm.com/community/user/integration/blogs/rob-convery1/2022/05/11/ibm-app-connect-operators-part-2-exploring)
 
 
-## Pipelines
+## Pipeline
 
-### Overview
-There are two pipelines in this repository.
-
-- [image builder](#image-builder-pipeline)
-    - This builds a container image that the second pipeline uses to build App Connect BAR files.
-    - You only need to run this once on your OpenShift cluster - once you have your builder image, you can reuse it every time you need to build and deploy your App Connect application.
-- [application deployer](#application-deployer-pipeline)
-    - This builds and deploys your App Connect Enterprise application.
-    - You need to run this every time your application has changed and you want to deploy the new version to OpenShift.
-
-### Image builder pipeline
-
-|  | **link** |
-| - | - |
-| **pipeline spec:** | [`1-prepare-builder/pipeline.yaml`](./tekton/1-prepare-builder/pipeline.yaml) |
-| **permissions created to run this pipeline** | [`builder.yaml` role](./tekton/1-prepare-builder/permissions/builder.yaml) |
-| **example pipeline runs:** | [`1-prepare-builder/pipelinerun.yaml`](./tekton/1-prepare-builder/pipelinerun.yaml) |
-| **helper script:** | [`1-prepare-ace-bar-builder.sh`](./1-prepare-ace-bar-builder.sh) |
-
-**What the pipeline does**
-
-Builds a container image used by the [application deployer pipeline](#application-deployer-pipeline) to build BAR files.
-
-**Outcome from running the pipeline**
-
-A new container image is pushed to the OpenShift image registry in the `pipeline-ace` namespace, which has everything needed to run the `mqsicreatebar` command.
-
-**Screenshot**
-
-![screenshot of the pipeline tasks](./screenshots/builder-pipeline.png)
-
-**Background**
+The pipeline builds and deploys your App Connect Enterprise application. You need to run it every time your application has changed and you want to deploy the new version to OpenShift.
 
 When running App Connect Enterprise in containers, there is a lot of flexibility about how much of your application is built into your container image, and how much is provided when the container starts.
 
 > For background reading on some of the options, and some of the considerations about them, see the blog post:
 > - [Comparing styles of container-based deployment for IBM App Connect Enterprise](https://community.ibm.com/community/user/integration/blogs/aiden-gallagher1/2022/07/12/comparing-styles-of-container-based-deployment-for)
 
-The pipelines in this repository provide almost all parts of your application at runtime when the container starts. The only component that is [baked into](https://community.ibm.com/community/user/integration/blogs/aiden-gallagher1/2022/07/12/comparing-styles-of-container-based-deployment-for) the image is the application BAR file.
+This pipeline provides almost all parts of your application at runtime when the container starts. The only component that is [baked into](https://community.ibm.com/community/user/integration/blogs/aiden-gallagher1/2022/07/12/comparing-styles-of-container-based-deployment-for) the image is the application BAR file.
 
-Baking the BAR files into custom App Connect images prevents the need to run a dedicated content server to host BAR files, however if you would prefer to do that see the documentation on [Mechanisms for providing BAR files to an integration server](https://www.ibm.com/docs/en/app-connect/containers_cd?topic=servers-mechanisms-providing-bar-files-integration-server) for more details on how to do this. (The pipelines in this repository use the approach described as "Custom image" in that documentation.)
+Baking the BAR files into custom App Connect images prevents the need to run a dedicated content server to host BAR files, however if you would prefer to do that see the documentation on [Mechanisms for providing BAR files to an integration server](https://www.ibm.com/docs/en/app-connect/containers_cd?topic=servers-mechanisms-providing-bar-files-integration-server) for more details on how to do this. (The pipeline in this repository uses the approach described as "Custom image" in that documentation.)
 
-Building this image is kept separate from the [application deployer pipeline](#application-deployer-pipeline) because it takes a long time (over 20 minutes) to run. Reusing the build image means application deployments can be much quicker.
-
-### Application deployer pipeline
+### Running the pipeline
 
 |  | **link** |
 | - | - |
-| **pipeline spec:** | [`2-deploy-integration-server/pipeline.yaml`](./tekton/2-deploy-integration-server/pipeline.yaml) |
+| **pipeline spec:** | [`pipeline.yaml`](./tekton/pipeline.yaml) |
 | **example pipeline runs:** | [`simple-pipelinerun.yaml`](./simple-pipelinerun.yaml) <br>[`complex-pipelinerun.yaml`](./complex-pipelinerun.yaml) |
-| **helper scripts:** | [`2-deploy-simple-integration-server.sh`](./2-deploy-simple-integration-server.sh) <br>[`2-deploy-complex-integration-server.sh`](./2-deploy-complex-integration-server.sh)
+| **helper scripts:** | [`1-deploy-simple-integration-server.sh`](./1-deploy-simple-integration-server.sh) <br>[`1-deploy-complex-integration-server.sh`](./1-deploy-complex-integration-server.sh)
 
 
 **What the pipeline does**
@@ -100,7 +67,7 @@ As shown in the screenshot above, this example pipeline currently supports many,
 - [server.conf.yaml type](https://www.ibm.com/docs/en/SSTTDS_contcd/com.ibm.ace.icp.doc/config_serverconfyaml.html)
 - [Truststore type](https://www.ibm.com/docs/en/SSTTDS_contcd/com.ibm.ace.icp.doc/config_truststore.html)
 
-For more information about the other Configuration types, see the documentation on [Configuration types for integration servers](https://www.ibm.com/docs/en/app-connect/containers_cd?topic=servers-configuration-types-integration). Adding support for any of these additional types would involve adding additional tasks to the [tasks provided in this repo](./tekton/2-deploy-integration-server/tasks/) - the existing tasks are commented to help assist with this.
+For more information about the other Configuration types, see the documentation on [Configuration types for integration servers](https://www.ibm.com/docs/en/app-connect/containers_cd?topic=servers-configuration-types-integration). Adding support for any of these additional types would involve adding additional tasks to the [tasks provided in this repo](./tekton/tasks/) - the existing tasks are commented to help assist with this.
 
 Each of these configuration resources is individually optional. Two example App Connect applications are provided to show how the pipeline supports different application types.
 
@@ -112,7 +79,7 @@ The pipeline can be used to deploy a stand-alone application with no configurati
 | - | - |
 | **sample application** | [simple-demo](./ace-projects/simple-demo/) |
 | **pipeline run config** | [`simple-pipelinerun.yaml`](./simple-pipelinerun.yaml) |
-| **demo script:** | [`2-deploy-simple-integration-server.sh`](./2-deploy-simple-integration-server.sh) |
+| **demo script:** | [`1-deploy-simple-integration-server.sh`](./1-deploy-simple-integration-server.sh) |
 
 ![screenshot](./demo-pre-reqs/images/simple-demo.png)
 
@@ -136,7 +103,7 @@ The pipeline can be used to deploy complex applications with multiple configurat
 | - | - |
 | **sample application** | [sample-ace-application](./ace-projects/sample-ace-application/) |
 | **pipeline run config** | [`complex-pipelinerun.yaml`](./complex-pipelinerun.yaml) |
-| **demo script:** | [`2-deploy-complex-integration-server.sh`](./2-deploy-complex-integration-server.sh) |
+| **demo script:** | [`1-deploy-complex-integration-server.sh`](./1-deploy-complex-integration-server.sh) |
 
 ![screenshot](./demo-pre-reqs/images/sample-ace-application.png)
 
@@ -228,11 +195,9 @@ store=# select * from todos;
 
 ## Configuring the pipeline for your App Connect Enterprise application
 
-The [image builder pipeline](#image-builder-pipeline) can be run as-is as described above, as it is a generic pipeline for creating a container image for building App Connect apps.
+To run the pipeline for your own application, you need to first create a `PipelineRun`.
 
-To run the [application deployer](#application-deployer-pipeline) for your own application, you need to first create a `PipelineRun`.
-
-The sample pipeline runs described above provide a good starting point for this, which you can modify to your own needs. You need to specify the location of your App Connect Enterprise application code and configuration resources. All of the available parameters are documented in the [pipeline spec](./tekton/2-deploy-integration-server/pipeline.yaml#L20-L191) if further guidance is needed.
+The sample pipeline runs described above provide a good starting point for this, which you can modify to your own needs. You need to specify the location of your App Connect Enterprise application code and configuration resources. All of the available parameters are documented in the [pipeline spec](./tekton/pipeline.yaml#L20-L191) if further guidance is needed.
 
 
 ## Supported versions

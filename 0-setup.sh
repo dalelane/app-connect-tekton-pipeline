@@ -30,9 +30,20 @@ oc create namespace pipeline-ace --dry-run=client -o yaml | oc apply -f -
 print_bold "storing github credentials for cloning the repo from a pipeline"
 oc apply -n pipeline-ace -f ./github-credentials.yaml
 
-print_bold "creating service account to run the pipelines as"
-oc apply -n pipeline-ace -f ./tekton/0-general/permissions
+print_bold "storing docker credentials for pulling image for BAR file builder"
+oc apply -n pipeline-ace -f ./ibm-entitlement-key.yaml
 
-print_bold "creating common pipeline tasks"
-oc apply -n pipeline-ace -f ./tekton/0-general/tasks
-oc apply -n pipeline-ace -f https://raw.githubusercontent.com/tektoncd/catalog/main/task/buildah/0.3/buildah.yaml
+print_bold "creating service account to run the pipelines as"
+oc apply -n pipeline-ace -f ./tekton/permissions/serviceaccount.yaml
+
+print_bold "setting up permissions for the deploy pipeline"
+oc apply -n pipeline-ace -f ./tekton/permissions
+
+print_bold "adding image builder permissions"
+oc adm policy add-scc-to-user privileged -z pipeline-deployer-serviceaccount -n pipeline-ace
+
+print_bold "creating tasks for the deployment pipeline"
+oc apply -n pipeline-ace -f ./tekton/tasks
+
+print_bold "creating deployment pipeline"
+oc apply -n pipeline-ace -f ./tekton/pipeline.yaml
