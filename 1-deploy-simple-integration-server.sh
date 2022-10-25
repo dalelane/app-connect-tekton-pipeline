@@ -13,15 +13,6 @@ fi
 source 0-setup.sh
 
 
-print_bold "setting up permissions for the deploy pipeline"
-oc apply -n pipeline-ace -f ./tekton/2-deploy-integration-server/permissions
-
-print_bold "creating tasks for the deployment pipeline"
-oc apply -n pipeline-ace -f ./tekton/2-deploy-integration-server/tasks
-
-print_bold "creating deployment pipeline"
-oc apply -n pipeline-ace -f ./tekton/2-deploy-integration-server/pipeline.yaml
-
 print_bold "running the pipeline"
 PIPELINE_RUN_K8S_NAME=$(oc create -n pipeline-ace -f ./simple-pipelinerun.yaml -o name)
 echo $PIPELINE_RUN_K8S_NAME

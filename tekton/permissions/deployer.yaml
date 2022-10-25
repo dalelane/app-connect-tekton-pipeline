@@ -19,8 +19,8 @@ rules:
       - get
 
   # ########################################################
-  #  permissions for creating the custom Docker image used
-  #   for building the ACE bar on-cluster
+  #  permissions for creating the custom Docker image with
+  #   the ACE bar baked into it
   # ########################################################
 
   - apiGroups:

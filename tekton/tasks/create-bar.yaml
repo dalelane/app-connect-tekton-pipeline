@@ -24,14 +24,36 @@ spec:
     - name: output
       description: workspace with the ACE resources in
 
-  stepTemplate:
-    env:
-      - name: HOME
-        value: "/tekton/home"
-
   steps:
+    - name: make-output-writable
+      image: image-registry.openshift-image-registry.svc:5000/openshift/tools
+      script: |
+        #!/bin/bash
+
+        set -e
+
+        echo "preparing bar output location to be writable by aceuser"
+        mkdir -p /workspace/output/bars
+        chmod a+wrx /workspace/output/bars
+
+        if [ -z "$(params.java-project-name)" ]
+        then
+          echo "No Java project to compile"
+        else
+          echo "making Java project writable to allow compiling"
+          chmod -R a+wrx "/workspace/output/ace-projects/$(params.java-project-name)"
+        fi
+
+
     - name: run-ace
-      image: image-registry.openshift-image-registry.svc:5000/pipeline-ace/ace-build-full:latest
+      # see https://www.ibm.com/docs/en/app-connect/12.0?topic=cacerid-building-sample-app-connect-enterprise-image-using-docker
+      #  for alternate images and versions that can be used for this
+      image: cp.icr.io/cp/appc/ace:12.0.6.0-r1@sha256:003ca6615312b0987fca1c09d676a77fc2c77ecc8607dfaa49f2e8e1976a6a15
+      securityContext:
+        # run as the aceuser user id
+        runAsUser: 1001
+        runAsGroup: 1001
+        runAsNonRoot: false
       env:
         - name: LICENSE
           value: accept
@@ -42,13 +64,12 @@ spec:
 
         echo "building a bar file for use with App Connect"
 
-        echo "starting dependencies for mqsicreatebar"
-        /usr/bin/Xvfb -ac :99 -nolisten unix &
-        export DISPLAY=:99
+        echo "setting up environment"
+        source /opt/ibm/ace-12/server/bin/mqsiprofile
 
-        echo "preparing bar output location"
+        echo "verifying bar output location"
         BAR_FOLDER="/workspace/output/bars"
-        mkdir -p $BAR_FOLDER
+        ls -l $BAR_FOLDER
 
         echo "confirming bar file location"
         BAR_FILE="$BAR_FOLDER/integration.bar"
@@ -61,18 +82,17 @@ spec:
         echo "checking Java project"
         if [ -n "$(params.java-project-name)" ]; then
           echo "$(params.java-project-name) needs to be built with the bar"
-          JAVA_BUILD_OPTION="-p $(params.java-project-name)"
+          JAVA_BUILD_OPTION="--project $(params.java-project-name)"
         else
           echo "no Java dependencies needed"
           JAVA_BUILD_OPTION=""
         fi
 
         echo "creating bar"
-        mqsicreatebar \
-          -data $ACE_PROJECTS_WORKSPACE \
-          -cleanBuild -deployAsSource \
-          -a $(params.ace-project-name) \
-          -b $BAR_FILE \
+        ibmint package \
+          --input-path $ACE_PROJECTS_WORKSPACE \
+          --project $(params.ace-project-name) \
+          --output-bar-file $BAR_FILE \
           $JAVA_BUILD_OPTION
 
         echo "checking bar"
