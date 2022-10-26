@@ -36,9 +36,10 @@ public class Simple_demo_say_hello_world_0001_Test {
 		// Initialise a NodeSpy
 		NodeSpy nodeSpy = new NodeSpy(nodeReference);
 
+		// Create a blank message assembly
 		TestMessageAssembly inputMessageAssembly = new TestMessageAssembly();
 
-		// Call the message flow node with the Message Assembly
+		// Call the message flow node with the blank Message Assembly
 		nodeSpy.evaluate(inputMessageAssembly, true, "in");
 
         /* Compare Output Message 1 at output terminal out */
