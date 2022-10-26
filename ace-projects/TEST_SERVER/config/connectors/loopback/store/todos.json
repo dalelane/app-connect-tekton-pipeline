@@ -1,0 +1,41 @@
+{
+    "name": "todos",
+    "options": {
+        "idInjection": false,
+        "postgresql": {
+            "table": "todos"
+        }
+    },
+    "properties": {
+        "id": {
+            "id": true,
+            "type": "number",
+            "required": true
+        },
+        "userId": {
+            "type": "number",
+            "required": true,
+            "postgresql": {
+                "columnName": "user_id"
+            }
+        },
+        "title": {
+            "type": "string", 
+            "required": true
+        },
+        "encodedTitle": {
+            "type": "string", 
+            "required": false,
+            "postgresql": {
+                "columnName": "encoded_title"
+            }
+        },
+        "completed": {
+            "type": "boolean",
+            "required": true,
+            "postgresql": {
+                "columnName": "is_completed"
+            }
+        }     
+    }
+}
