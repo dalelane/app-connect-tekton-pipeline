@@ -1,0 +1,7 @@
+kind: Secret
+apiVersion: v1
+metadata:
+  name: ibm-entitlement-key
+data:
+  .dockerconfigjson: dockerentitlementkey
+type: kubernetes.io/dockerconfigjson

@@ -71,6 +71,15 @@ For more information about the other Configuration types, see the documentation 
 
 Each of these configuration resources is individually optional. Two example App Connect applications are provided to show how the pipeline supports different application types.
 
+#### YAML files for secrets based on templates
+
+The pipeline relies on credentials for access to restricted resources:
+
+- `github-credentials.yaml`
+    - based on [`template-github-credentials.yaml`](./template-github-credentials.yaml) - github personal access token with access to clone this repo.
+- `ibm-entitlement-key.yaml`
+    - based on [`template-ibm-entitlement-key.yaml`](./template-ibm-entitlement-key.yaml) - secret with an [IBM Entitlement Key](https://www.ibm.com/docs/en/cloud-paks/cp-integration/2021.3?topic=installing-applying-your-entitlement-key) for access to Cloud Pak for Integration software.
+
 #### Simple stand-alone applications
 
 The pipeline can be used to deploy a stand-alone application with no configuration dependencies.
