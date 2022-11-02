@@ -3,3 +3,11 @@ ibm-entitlement-key.yaml
 *.class
 .DS_Store
 ca.p12
+# Eliminate test server runtime artifacts
+ace-projects/TEST_SERVER/config/registry/integration_server/CurrentVersion/*
+ace-projects/TEST_SERVER/config/components/*
+ace-projects/TEST_SERVER/config/common/log/*
+ace-projects/TEST_SERVER/config/*.*
+ace-projects/TEST_SERVER/run/.lock
+ace-projects/TEST_SERVER/run/*application*
+ace-projects/TEST_SERVER/log/*
