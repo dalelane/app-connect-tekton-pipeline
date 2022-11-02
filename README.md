@@ -125,11 +125,13 @@ Watching the pipeline run (also sped up!) it looks like this.
 
 To avoid needing to store credentials in git with your application code, the pipeline retrieves credentials from Kubernetes secrets. When [configuring the pipeline for your application](#configuring-the-pipeline-for-your-app-connect-enterprise-application) you need to specify the secrets it should use to do this.
 
-## Tests
+## Tests
 
 If you have a [test project](https://www.ibm.com/docs/en/app-connect/12.0?topic=tests-running-integration) for your App Connect application, the pipeline can run this test as well.
 
 Provide the name of your test project in the pipeline config, and your tests will be run after the BAR file is built.
+
+If you don't provide a test project, the test step in the pipeline will be skipped.
 
 ## Sample apps
 
