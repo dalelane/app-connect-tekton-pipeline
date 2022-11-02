@@ -48,6 +48,14 @@ spec:
         This should be the name of a folder in ace-projects in the
         git-repository being cloned.
 
+    - name: test-project-name
+      default: ""
+      description: |+
+        Name of an App Connect test project to run to verify the bar file
+        that is built with the ace-project-name project.
+        The new integration server will only be deployed if all of the tests
+        in this project pass.
+        Leave this as an empty string if there are no tests to run.
 
     # ########################################################
     #
@@ -221,6 +229,27 @@ spec:
         # need the git repository to be able to
         #  compile the project into a bar file
         - clone-source
+      workspaces:
+        - name: output
+          workspace: pipeline-shared-workspace
+
+    - name: test
+      taskRef:
+        name: ace-run-tests
+      params:
+        - name: bar-file-location
+          value: "$(tasks.bar-file.results.folder)"
+        - name: test-project-name
+          value: "$(params.test-project-name)"
+      when:
+        - input: "$(params.test-project-name)"
+          operator: notin
+          values:
+            - ""
+      runAfter:
+        # need the bar file to be built in order
+        #  to test it
+        - bar-file
       workspaces:
         - name: output
           workspace: pipeline-shared-workspace

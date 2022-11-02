@@ -4,6 +4,7 @@
 
 - [Overview](#overview)
 - [Pipeline](#pipeline)
+- [Tests](#tests)
 - [Sample ACE apps](#sample-apps)
 - [Building your own app](#configuring-the-pipeline-for-your-app-connect-enterprise-application)
 - [Supported versions](#supported-versions)
@@ -124,6 +125,12 @@ Watching the pipeline run (also sped up!) it looks like this.
 
 To avoid needing to store credentials in git with your application code, the pipeline retrieves credentials from Kubernetes secrets. When [configuring the pipeline for your application](#configuring-the-pipeline-for-your-app-connect-enterprise-application) you need to specify the secrets it should use to do this.
 
+## Tests
+
+If you have a [test project](https://www.ibm.com/docs/en/app-connect/12.0?topic=tests-running-integration) for your App Connect application, the pipeline can run this test as well.
+
+Provide the name of your test project in the pipeline config, and your tests will be run after the BAR file is built.
+
 ## Sample apps
 
 I've put notes on how I set up the sample apps to demonstrate the pipeline in [demo-pre-reqs/README.md](./demo-pre-reqs/README.md) however neither of the sample apps are particularly useful and were purely used to test and demo the pipeline.
@@ -151,6 +158,14 @@ returns this:
 ```json
 {"hello":"world"}
 ```
+
+#### Test
+
+A test for this app is provided in [simple-demo_Test](./ace-projects/simple-demo_Test/).
+
+To run it:
+1. Create a local integration server called `TEST_SERVER` (inheriting the configuration in the [TEST_SERVER](./ace-projects/TEST_SERVER/) folder)
+2. Run the test launch configuration [simple-demo_Test.launch](./ace-projects/simple-demo_Test/simple-demo_Test.launch)
 
 ### Complex app
 
@@ -193,11 +208,20 @@ store=# select * from todos;
 (1 row)
 ```
 
+#### Test
+
+A test for this app is provided in [sample-ace-application_Test](./ace-projects/sample-ace-application_Test/).
+
+To run it:
+1. Create a local integration server called `TEST_SERVER` (inheriting the configuration in the [TEST_SERVER](./ace-projects/TEST_SERVER/) folder)
+2. Run the test launch configuration [sample-ace-application_Test.launch](./ace-projects/sample-ace-application_Test/sample-ace-application_Test.launch)
+
+
 ## Configuring the pipeline for your App Connect Enterprise application
 
 To run the pipeline for your own application, you need to first create a `PipelineRun`.
 
-The sample pipeline runs described above provide a good starting point for this, which you can modify to your own needs. You need to specify the location of your App Connect Enterprise application code and configuration resources. All of the available parameters are documented in the [pipeline spec](./tekton/pipeline.yaml#L20-L191) if further guidance is needed.
+The sample pipeline runs described above provide a good starting point for this, which you can modify to your own needs. You need to specify the location of your App Connect Enterprise application code and configuration resources. All of the available parameters are documented in the [pipeline spec](./tekton/pipeline.yaml#L20-L199) if further guidance is needed.
 
 
 ## Supported versions

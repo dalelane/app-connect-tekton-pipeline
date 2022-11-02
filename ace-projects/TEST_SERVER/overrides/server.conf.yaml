@@ -1,6 +1,7 @@
 ---
 RestAdminListener:
    port: 7600
+   ipcSocket: '/tmp/ace-test-placeholder.uds'
 ResourceManagers:
   HTTPConnector:
     ListenerPort: 7800

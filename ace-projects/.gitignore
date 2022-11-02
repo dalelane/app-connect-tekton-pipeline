@@ -1,0 +1,7 @@
+/TEST_SERVER/config/common
+/TEST_SERVER/config/registry
+/TEST_SERVER/config/components
+/TEST_SERVER/server.conf.yaml
+/TEST_SERVER/console.log
+/TEST_SERVER/log
+/TEST_SERVER/run

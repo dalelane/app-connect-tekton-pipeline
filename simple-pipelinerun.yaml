@@ -34,6 +34,12 @@ spec:
     - name: ace-project-name
       value: "simple-demo"
 
+    # name of an App Connect test project
+    #  This is used to verify the bar before the new
+    #  Integration Server is deployed
+    #  This should be the name of a folder in ace-projects
+    - name: test-project-name
+      value: "simple-demo_Test"
 
 
   pipelineRef:
