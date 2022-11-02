@@ -1,0 +1,10 @@
+{
+    "store": {
+      "name": "store",
+      "connector": "postgresql",
+      "protocol": "postgres",
+      "host": "TEMPLATE_POSTGRES_HOST",
+      "port": 1234,
+      "database": "TEMPLATE_POSTGRES_DBNAME"
+   }
+}

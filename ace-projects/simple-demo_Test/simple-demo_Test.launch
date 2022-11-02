@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?><launchConfiguration type="com.ibm.etools.mft.junit.launchConfigurationType">
+<booleanAttribute key="NodeJSDisabled" value="true"/>
+<booleanAttribute key="RestAdminPortDisabled" value="true"/>
+<booleanAttribute key="clearResourcesdeleteWorkDir" value="false"/>
+<stringAttribute key="debugPort" value="6000"/>
+<stringAttribute key="mqManagerName" value="FakeQueueManagerName"/>
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+<listEntry value="/simple-demo_Test"/>
+</listAttribute>
+<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+<listEntry value="4"/>
+</listAttribute>
+<stringAttribute key="org.eclipse.jdt.junit.CONTAINER" value="=simple-demo_Test"/>
+<booleanAttribute key="org.eclipse.jdt.junit.KEEPRUNNING_ATTR" value="false"/>
+<stringAttribute key="org.eclipse.jdt.junit.TESTNAME" value=""/>
+<stringAttribute key="org.eclipse.jdt.junit.TEST_KIND" value="org.eclipse.jdt.junit.loader.junit5"/>
+<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value=""/>
+<stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="simple-demo_Test"/>
+<stringAttribute key="serviceTrace" value="none"/>
+<booleanAttribute key="startFlowThreads" value="false"/>
+<booleanAttribute key="useTempWorkingdir" value="true"/>
+<stringAttribute key="workingDirectory" value=""/>
+</launchConfiguration>

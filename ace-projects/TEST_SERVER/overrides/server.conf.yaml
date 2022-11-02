@@ -1,0 +1,21 @@
+---
+RestAdminListener:
+   port: 7600
+   ipcSocket: '/tmp/ace-test-placeholder.uds'
+ResourceManagers:
+  HTTPConnector:
+    ListenerPort: 7800
+  JVM:
+    jvmDebugPort: 9997
+
+EnvironmentVariables:
+    # environment variable to add to the integration server when run
+    #  used in the Java class uk.co.dalelane.appconnect.demo.Base64EncodeTodoDescription
+    TODO_TITLE_PREFIX: 'ENCODED:'
+
+Credentials:
+  ServerCredentials:
+    loopback:
+      postgres-creds:
+        username: 'dummy'
+        password: 'dummy'

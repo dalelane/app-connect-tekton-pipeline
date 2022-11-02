@@ -1,0 +1,693 @@
+---
+# ACE Integration Server configuration file
+#
+# Created at 12.0.6.0 - 5f0e97cacec81a59105faafbe0bc9f93-725362bb6c4df32013b83b36a127f242
+#
+# General notes :
+#  - Integration Server will load server.conf.yaml from directory set via --work-dir
+#  - To ensure valid YAML avoid any use of TAB characters
+#  - File paths may be taken as absolute, or relative to the integration server's work directory
+#
+# WARNING: Any value specified in the 'overrides/server.conf.yaml' will override values here
+#
+serverConfVersion: 1
+
+#lilPath: ''                 # A list of paths from where User-defined node LIL/JAR files are loaded. (multiple directories are separated by platform path separator)
+
+#deployMode: 'replace'       # Deploy mode: replace | none | manual
+#scanForKeywords: ''         # A comma-delimited list of file types, selected from
+                             # [esql, xsl, xslt], to scan for keywords.
+
+# The remoteDefaultQueueManager and defaultQueueManager properties are mutually exclusive. Only uncomment one of these two options.
+#defaultQueueManager: ''        # Set non-empty string to specify a default queue manager
+#mqTrustedQueueManager: 'no'    # Set to yes to enable MQ communication as a trusted (fastpath) application (does not apply to remote QM)
+
+#remoteDefaultQueueManager: ''  # Specify an MQEndpoint policy in the format {policy project}:policy
+#replacementQueuePrefix: 'MYPREFIX' # When using a remoteDefaultQueueManager, use this prefix to enable the same queue manager
+                                    # to be used for multiple separate integration servers. The prefix replaces the "SYSTEM.BROKER."
+                                    # section of the queue name.
+
+#trace: 'none'               # choose 1 of : none|debug|debugTree|diagnostic|diagnosticTree
+#traceSize: '1G'             # Set the service trace size
+
+#traceNodeLevel: true        # Enable or disable message flow 'Trace nodes'
+
+#userTrace: 'none'           # choose 1 of : none|debug|debugTree
+#userTraceSize: '1G'         # Set the service trace size
+
+#forceServerHTTP:               false  # Set true to override and force unsecured HTTP on all HTTP/SOAP input nodes deployed in this server. Defaults to false.
+#forceServerHTTPS:              false  # Set true to override and force secured HTTPS on all HTTP/SOAP input nodes deployed in this server. Defaults to false.
+#forceServerHTTPSecurityProfile: ''    # Set a security profile, {<policy project name>}:<security profile basename>, to override and force all HTTP/SOAP transport.
+                                       # input nodes deployed in this server to apply the security set in the profile. Default is unset, so flow or node setting applies.
+#forceServerHTTPFaultDetail: 'specific' # Set the detail level for the default Error Handling fault messages returned by all HTTP/SOAPInput nodes. Default is 'specific'.
+                                       # Set to 'specific' for full error & exception details to be included in the response. Set to 'generic' for error and exception details to be hidden and a generic error response to be sent.
+#httpServerName: ''                    # Set the value to be returned in the 'Server' HTTP response header. Cf. the ResourceManagers / HTTP[S]Connector / ServerName
+                                       # pair of settings, which take precedence over this one.
+#iwaGSSHostnameOverride: ''            # Set the local hostname to be used in GSS-controlled Kerberos authentication from a SOAP or HTTP input node. Can also be set
+                                       # via the MQSI_GSS_HOSTNAME_OVERRIDE environment variable, which takes precedence over this setting.
+
+#additionalJpluginDirectories: ''       # Extra directories to search for Java plugins; can reference shared libraries using '{shlibname}' syntax.
+#additionalSharedClassesDirectories: '' # Extra directories to add to the shared classloader search path; can reference shared libraries using '{shlibname}' syntax.
+#abendDirectory: ''                     # Set the directory to store abends and related error files
+#traceDirectory: ''                     # Set the directory to store trace files
+
+Log:
+  consoleLog: true           # Control writing BIP messages to standard out. Set to true or false, default is true.
+  outputFormat: 'idText'     # Control the format of BIP messages written to standard out and file. Set to idText, text or ibmjson, default is text if unset.
+  #additionalJsonElements: '"name1": "value1", "name2": "value2"'    #When the outputFormat is set to ibmjson the specified json elements are added to the root of the logging object
+  #eventLog: '[iib.system-work-dir]/log/[iib.system-node-label].[iib.system-server-label].events.txt'     # Control writing BIP messages to file. Set to '' to disable, default is as shown.
+  #eventLogFileSize: 10      # The maximum size in MB of an event log file before it is rotated into a new file
+  #eventLogFileCount: 10     # The maximum number of event log files that should be rotated between.
+  #elkLog: false             # Control the publication of BIP messages to an ELK (Elasticsearch, Logstash, Kibana) stack. Set to true or false, default is false.
+  #elkConnections: ''        # Name of the ELK connection to use, for example 'elkConnection1', must be defined in the ELKConnections section below.
+
+AdminLog:
+  #enabled: true               # Control logging admin log messages. Set to true or false, default is true.
+  # When enabled the maximum amount of disk space required for admin log files is
+  #  fileLogRetentionPeriod * fileLogCountDaily * fileLogSize
+  #fileLog: false              # Control writing admin log messages to file. Set to true or false, default is false.
+  #fileLogRetentionPeriod: 30  # Sets the number of days to record admin log.
+                               # After this, old files are deleted as new ones are created. Default is 30 days.
+  #fileLogCountDaily: 10       # Maximum number of admin log files to write per day, default is 10 per day.
+  #fileLogSize: 100            # Maximum size in MB for each admin log file. Maximum size is 2000MB, default size is 100MB.
+  consoleLog: false            # Control writing admin log messages to standard out. Set to true or false, default is false.
+  consoleLogFormat: 'idText'   # Control the format of admin log messages written to standard out. Set to idText, text or ibmjson, default is text if unset.
+  #additionalJsonElements: '"name1": "value1", "name2": "value2"'    #When the outputFormat is set to ibmjson the specified json elements are added to the root of the logging object
+
+RestAdminListener:
+  #port: 7600                # Set the Admin REST API Port for ACE Web UI and Toolkit or -1 to disable. Defaults to 7600.
+
+  # Note the Admin REST API will be insecure without the following being set
+  #host: 'localhost'         # Set the hostname otherwise we bind to the unspecified address
+
+  # SSL Server auth
+  #sslCertificate: '/path/to/serverPKCS.p12'  # See comment below
+  #sslPassword: 'adminRestApi::sslpwd'        # See comment below
+
+  # Server TLS configuration
+  minimumTlsVersion: 'TLSv1.2'   # Set the minimum TLS version that will be accepted from clients. Default is 'TLSv1.0', must be one of 'TLSv1.0', 'TLSv1.1', or 'TLSv1.2'
+  # maximumTlsVersion: 'TLSv1.2' # Set the maximum TLS version that will be accepted from clients. Default is 'TLSv1.2', must be one of 'TLSv1.2' or 'TLSv1.3'. This must be at least the value set for minimumTlsVersion otherwise all connections will be rejected.
+  #tlsCipherList: '' # Set the list of acceptable ciphers that should be used in TLS connections. Specify the empty string to use the default cipher list. This should be a colon separated list of upper case cipher names following the OpenSSL cipher list naming convention.
+  #tlsTrace: false  # Enables tracing of TLS handshake to the console.
+
+  #antiClickJackingOption: 'SAMEORIGIN'      # Set the value of the X-Frame-Origin header sent by the web user interface. The default is 'SAMEORIGIN' for security. Set to '' to disable the X-Frame-Origin header.
+
+  # If using a pem certificate:
+    # sslCertificate is the full path to the server certificate key
+    # sslPassword is the full path to the server private key, which must be a standard private key and not an encrypted one
+    # The file names must end with '.pem'
+  # If using p12/pfx certificate:
+    # sslCertificate is the full path to the server certificate store file
+    # sslPassword is the passphrase or alias to the passphrase of the certificate store
+
+  # SSL Client auth
+  #requireClientCert: true                    # Request a certificate from the client
+  #caPath: '/path/to/CA/certificates'         # CA certs, all files at this path will be read
+
+  # Admin Security
+  #  Authentication
+  #  If basicAuth enabled, a maximum of authMaxAttempts authentication attempts are allowed for a client within period authAttemptsDuration
+  #  If authMaxAttempts is reached without success, the client is locked out for period authBlockedDuration
+  #basicAuth: false                                                   # Clients web user name and password will be authenticated when set true
+  webUserPasswordHashAlgorithm: PBKDF2-SHA-512                        # Algorithm used to hash the password for webuser accounts.
+  #authMaxAttempts: 5                                                 # Max allowed authentication attempts
+  #authAttemptsDuration: 300                                          # Authentication attempts period in seconds
+  #authBlockedDuration: 300                                           # Authentication blocked period in seconds
+  #sessionTimeout: -1                                                 # Client-side expiration time in seconds for REST API/Web UI sessions.
+                                                                      # Negative values or zero signify that the session remain active
+                                                                      # for the lifetime of the browser session. Defaults to -1.
+  #serverSessionTimeout: 86400                                        # Server-side expiration time in secods for REST API/Web UI sessions. Can
+                                                                      # be specified independently of the client-side timeout, allowing sessions
+                                                                      # to be invalidated on the server before they are expired by the client. This
+                                                                      # useful in particular when the client-side session lifetime is set to that
+                                                                      # of the browser session ('BROWSER_EXIT' special
+  #serverSessionTimeoutCheckInterval: 3600
+  #ldapUrl: ldap[s]://server[:port]/baseDN[?[uid_attr][?[base|sub]]]  # ldap authentication url
+  #ldapBindDn: ldap::adminAuthentication                              # Resource alias or full bind dn
+  #ldapBindPassword: ldap::adminAuthentication                        # Resource alias or bind password
+  #  Authorization
+  #authorizationEnabled: false     # Clients web user role will be authorized when set true
+  #authorizationMode: 'file'       # Set authorization mode. Choose 1 of : ldap, file
+  #ldapAuthorizeUrl: ldap[s]://server[:port]/baseDN[?[attr_name][?[base|sub]][?filter_expr]]  # ldap authorization search url
+  #ldapCheckServerIdentity : true  # Disables hostname verification of ldaps server when set to false
+
+Security:
+  LdapAuthorizeAttributeToRoleMap:
+    # When 'authMode' is ldap, set the mapping from a matched LDAP authorization attribute, as
+    # configured in 'ldapAuthorizeUrl' to the ACE web user role name
+    # e.g. map the following LDAP group DNs to web user roles 'adminRole', 'viewRole'
+    #'cn=admins,cn=group,ou=ace': 'adminRole'
+    #'cn=monitors,cn=group,ou=ace': 'viewRole'
+  Permissions:
+    # Set Admin Security Authorization file permissions by web user role using 'read+:write+:execute+' , or 'all+'
+    # '+' grants permission, '-' denies permission
+    # e.g. define the following web user roles 'viewRole' and 'adminRole'
+    #viewRole:  'read+:write-:execute-'
+    #adminRole: 'all+'
+  DataPermissions:
+    # Set Admin Security Authorization file permissions for Record and Replay web user role using 'read+:write+:execute+' , or 'all+'
+    # '+' grants permission, '-' denies permission.  Record and Replay roles also require 'read+' permission to be defined
+    # in the Permissions section above.
+    # e.g. define the following web user roles 'dataViewer', 'dataReplayer' and 'adminRole'
+    #dataViewer:  'read+:write-:execute-'
+    #dataReplayer: 'read+:write-:execute+'
+    #adminRole: 'all+'
+
+Defaults:
+  #defaultApplication: ''            # Name a default application under which independent resources will be placed
+  #policyProject: 'DefaultPolicies'  # Name of the Policy project that will be used for unqualified Policy references, default is 'DefaultPolicies'
+  Policies:
+    # Set default policy names, optionally qualified with a policy project as {policy project}:name
+    #monitoringProfile: ''       # Default Monitoring profile
+  Credentials:
+    # Names a default credential name to be used when a more specific credential is not available for the credential type.
+    #httpproxy: ''
+    #jdbc: ''
+    #kafka: ''
+    #kerberos: ''
+    #ldap: ''
+    #odbc: ''
+    #mq: ''
+    #wsrr: ''
+
+Events:
+  OperationalEvents: # Message flow and Resource statistics plus Workload management
+    MQ:
+      #policy: ''               # Specify a {policy project}:policy if not using  'defaultQueueManager'
+      #enabled: false           # Set true or false, default false
+      #format: ''               # Set string or none
+      #publishRetryInterval: 0  # Set the retry interval (in milliseconds), to pause all publications and retry, when publication failures are causing serious delay to the transaction.
+    MQTT:
+      #policy: ''               # Specify a {policy project}:policy
+      #enabled: false           # Set true or false, default false
+      #format: ''               # Set string or none
+      #publishRetryInterval: 0  # Set the retry interval (in milliseconds), to pause all publications and retry, when publication failures are causing serious delay to the transaction.
+  BusinessEvents: # Monitoring events
+    MQ:
+      #policy: ''                # Specify a {policy project}:policy if not using  'defaultQueueManager'
+      #enabled: false            # Set true or false, default false
+      #format: ''                # Set string or none
+      #outputFormat: 'xml'       # Set comma separated list of one or more of : json,xml. Defaults to 'xml'
+      #publishRetryInterval: 0   # Set the retry interval (in milliseconds), to pause all publications and retry, when publication failures are causing serious delay to the transaction.
+    MQTT:
+      #policy: ''                # Specify a {policy project}:policy
+      #enabled: false            # Set true or false, default false
+      #format: ''                # Set string or none
+      #outputFormat: 'xml'       # Set comma separated list of one or more of : json,xml. Defaults to 'xml'
+      #publishRetryInterval: 0   # Set the retry interval (in milliseconds), to pause all publications and retry, when publication failures are causing serious delay to the transaction.
+    ELK:
+      #enabled: false            # Set true or false, default false
+      #outputFormat: 'json'      # Set json, default json
+      #elkConnections: ''        # Name of the ELK connection to use, for example 'elkConnection1', must be defined in the ELKConnections section below.
+    File:
+      #enabled: false            # Set true or false, default false
+      #outputFormat: 'json'      # Set comma separated list of one or more of : json,xml. Defaults to 'json'
+
+Monitoring:
+  MessageFlow:
+    #publicationOn: 'inactive'         # choose 1 of : active|inactive, default inactive
+                                       # Ensure Events.BusinessEvents.MQ|MQTT is set
+    #eventFormat: 'MonitoringEventV2'  # When BusinessEvents.-.outputFormat is xml set MonitoringEventV2 or WMB, default MonitoringEventV2
+
+Statistics:
+  # All applications and message flows will inherit the Snapshot and Archive values set here, unless they have been set
+  # to a specific value other than inherit via the WebUI, mqsichangeflowstats command, Toolkit or apiv2 REST
+  # Notes
+  #  - values here can be overridden by 'overrides/server.conf.yaml'
+  #  - to publish on MQ or MQTT, also configure Events.OperationalEvents, and set outputFormat  to include json and/or xml
+  #  - to display in the WebUI Snapshot.outputFormat must include json; nodeDataLevel needs to be set to basic or advanced
+  Snapshot:
+    publicationOn: 'active'      # choose 1 of : active|inactive, explictly set 'active'. If unset will default to 'inactive'
+    #accountingOrigin: 'none'    # choose 1 of : none|basic, default none
+    nodeDataLevel: 'basic'       # choose 1 of : none|basic|advanced, explictly set 'basic'. If unset will default to 'none'
+    outputFormat: 'json'         # choose comma separated list of one or more of : csv,json,xml,usertrace. Explictly set to 'json' for WebUI. If unset will default to ''
+    #threadDataLevel: 'none'     # choose 1 of : none|basic. If unset will default to 'none'
+  Archive:
+    #archivalOn: 'inactive'      # choose 1 of : active|inactive, default inactive
+                                 # Also set Events.OperationalEvents.MQ|MQTT for outputFormat xml to be published to MQ/MQTT
+    #accountingOrigin: 'none'    # choose 1 of : none|basic
+    #majorInterval: 60           # Sets the interval in minutes at which archive statistics are published
+    #nodeDataLevel: 'none'       # choose 1 of : none|basic|advanced
+    #outputFormat: 'usertrace'   # comma separated list of : csv,xml,usertrace
+    #threadDataLevel: 'none'     # choose 1 of : none|basic
+  #csv:                           # The csv section is used when either Snapshot or Archive Statistics have an output format of csv.
+    #filePath: ''                 # The file path where the statistics records will be written to when there is an outputFormat of csv.
+                                  # If this is set to '' then the default path is <work-dir>/config/common/stats.
+    #numberOfFiles: 4             # The maximum number of files that message flow statistics file writing can rotate through.
+    #sizeOfFile: 25               # The maximum size in MB of a single file that a statistics file can use before rotating to the next file.
+    #averages: true               # When set to true the average values for each statistic are included in the written output.
+  Resource:
+    reportingOn: true            # choose 1 of : true|false, Set to 'true'. If unset will default to 'false'
+    #outputFormat: 'csvFile'     # choose 'csvFile', or 'file' for IIB v10 compatibility. if unset will default to ''
+    #filePath: ''                # The file path where the statistics records will be written to when csvFile or file outputFormat is used.
+                                 # If this is set to '' then the default path is <work-dir>/config/common/resourceStats.
+    #numberOfFiles: 4            # The maximum number of files that resource statistics file writing can rotate through.
+    #sizeOfFile: 25              # The maximum size in MB of a single file that a statistics file can use before rotating to the next file.
+    #averages: true              # When set to true the average values for each statistic are included in the written output.
+
+UserExits:
+  #activeUserExitList: ''        # Specify the name of an installed user exit to activate.
+  #userExitPath: ''              # Specify the path or paths containing the user exits to be loaded. Multiple paths should be separated by colons on Unix and semi-colons on Windows.
+
+BrokerRegistry:
+  #brokerKeystoreType: 'JKS'                          # Key store type
+  #brokerKeystoreFile: ''                             # Location of the broker key store
+  #brokerKeystorePass: 'brokerKeystore::password'     # Resource alias containing the key store password
+  #brokerTruststoreType: 'JKS'                        # Trust store type
+  #brokerTruststoreFile: ''                           # Location of the broker trust store
+  #brokerTruststorePass: 'brokerTruststore::password' # Resource alias containing the trust store password
+  #brokerCRLFileList: ''
+  #brokerEnableCRLDP: ''
+  #allowSSLv3: ''
+  #allowSNI: ''
+  #reenableTransportAlgorithms: ''
+  #reenableCertificateAlgorithms: ''
+  #mqCCDT: ''
+  #httpConnectorPortRange: ''
+  #httpsConnectorPortRange: ''
+  #brokerKerberosConfigFile: ''
+  #brokerKerberosKeytabFile: ''
+  #mqKeyRepository: ''
+
+ResourceManagers:
+  JVM:
+    #jvmVerboseOption: 'none'
+    #jvmDisableClassGC: ''
+    #jvmEnableIncGC: ''
+    #jvmShareClasses: ''
+    #jvmNativeStackSize: -1
+    #jvmJavaOSStackSize: -1
+    #jvmMinHeapSize: 33554432        # minimum JVM  heap size in bytes (32MB)
+    #jvmMaxHeapSize: 268435456       # maximum JVM heap size in bytes (256MB)
+    #jvmDebugPort: 0                 # Set non-zero to activate JVM debug port for Toolkit debugging
+    #jvmSystemProperty: ''
+    #keystoreType: ''                # JVM key store type
+    #keystoreFile: ''                # JVM location of the key store
+    #keystorePass: ''                # JVM resource alias containing the key store password
+    #truststoreType: '               # JVM trust store type
+    #truststoreFile: ''              # JVM location of the trust store
+    #truststorePass: ''              # JVM resource alias containing the trust store password
+    #crlFileList: ''
+    #enableCRLDP: ''
+    #kerberosConfigFile: ''
+    #kerberosKeytabFile: ''
+    #networkaddressCacheTtl: 60      # Default DNS cache timeout, applied to both networkaddress.cache.ttl and
+                                     # sun.net.inetaddr.ttl unless either are already set.
+
+  HTTPConnector:
+    #ListenerPort: 0              # Set non-zero to set a specific port, defaults to 7800
+    #ListenerAddress: '0.0.0.0'   # Set the IP address for the listener to listen on. Default is to listen on all addresses
+    #AutoRespondToHTTPHEADRequests: false # Automatically respond to HTTP HEAD requests without invoking the message flow. Set to true or false, default is false.
+    #ServerName: ''               # Set the value to be returned in the 'Server' HTTP response header.
+    #CORSEnabled: false           # Set the value to true to make the listener respond to valid HTTP CORS requests
+    #CORSAllowOrigins: '*'
+    #CORSAllowCredentials: false
+    #CORSExposeHeaders: 'Content-Type'
+    #CORSMaxAge: -1
+    #CORSAllowMethods: 'GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS'
+    #CORSAllowHeaders: 'Accept,Accept-Language,Content-Language,Content-Type,Authorization'
+    #DuplicateHeaderAction: 'combineHeaders' # Set to 'combineHeaders' (the default) for standard RFC 2616 behaviour; for compatibility with
+                                             # IIB v10 and earlier, set to 'useLastHeader' so that the HTTPInput header value is the taken
+                                             # from the last header when duplicate headers are detected. Other valid settings are 'useFirstHeader'
+                                             # and 'errorOnDuplicate'. Note that this value must match any value specified for HTTPSConnector below.
+  HTTPSConnector:
+    #ListenerPort: 0                 # Set non-zero to set a specific port, defaults to 7843
+    #ListenerAddress: '0.0.0.0'      # Set the IP address for the listener to listen on. Default is to listen on all addresses
+    #ReqClientAuth: true             # Controls whether to request for client certificate during tls handshake.
+    #RejectUnauthorizedClient: true  # Controls whether to allow connection without client certificate when ReqClientAuth is set.
+    #KeyAlias: ''
+    #KeyPassword: 'P4s5w0rd'         # Set the password or alias to the password of the key
+    #KeystoreFile: '/path/to/keystore.jks'
+    #KeystorePassword: 'P4s5w0rd'    # Set the password or alias to the password of the keystore
+    #KeystoreType: 'JKS'             # Set the keystore type, can be 'JKS' or 'P12'. Default is JKS.
+    #TruststoreFile: /path/tp/truststore.jks
+    #TruststorePassword: 'P4s5w0rd'  # Set the password or alias to the password of the keystore
+    #TruststoreType: 'JKS'           # Set the truststore type, can be 'JKS' or 'PEM'. Default is JKS.
+    #CipherSpec: ''                  # Comma-separated list of allowable ciphers. IANA cipher names are accepted.
+                                     # Example: 'TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384'.
+    #AutoRespondToHTTPHEADRequests: false # Automatically respond to HTTP HEAD requests without invoking the message flow. Set to true or false, default is false.
+    #ServerName: ''                  # Set the value to be returned in the 'Server' HTTP response header.
+    #CORSEnabled: false              # Set the value to true to make the listener respond to valid HTTP CORS requests
+    #CORSAllowOrigins: '*'
+    #CORSAllowCredentials: false
+    #CORSExposeHeaders: 'Content-Type'
+    #CORSMaxAge: -1
+    #CORSAllowMethods: 'GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS'
+    #CORSAllowHeaders: 'Accept,Accept-Language,Content-Language,Content-Type,Authorization'
+    #EnableTLSTrace: false           # Enables tracing of TLS handshake messages to the console
+    #AllowRenegotiation: true        # Controls whether renegotiation of connections is allowed when using TLSv1.2 and earlier.
+    #DuplicateHeaderAction: 'combineHeaders' # Set to 'combineHeaders' (the default) for standard RFC 2616 behaviour; for compatibility with
+                                             # IIB v10 and earlier, set to 'useLastHeader' so that the HTTPInput header value is the taken
+                                             # from the last header when duplicate headers are detected. Other valid settings are 'useFirstHeader'
+                                             # and 'errorOnDuplicate'. Note that this value must match any value specified for HTTPConnector above.
+  ActivityLogManager:
+    #activityLogEnabled: true
+    #defaultLogSizePerThread: 1000
+    #minSeverityLevel: 'INFO'        # choose one of INFO|WARN|ERROR
+
+  RecordedMessageManager:
+    #recordedMessagePath: ''         # Set the directory to store recorded messages
+    #recordAllMessages: false        # Set to 'true' to enabling recording of messages from all message flows
+
+  DatabaseConnectionManager:
+    #maxConnectionAge: 60                       # Set to -1 to never release connections
+    #useDefaultSchemaForStoredProcedures: true
+
+  SocketConnectionManager:
+    #allowedAuthTypes: 'platform default'   # Sets the allowable authentication mechanisms when responding to a HTTP 401 response during a HTTP based request.
+                                            # Multiple values can be specified and should be semi-colon separated.
+                                            # Valid values are 'basic', 'ntlm', 'negotiate', 'nego2', 'all', 'iwa', 'platform default'.
+                                            # Unix only supports 'basic'. Windows supports all values.
+                                            # 'platform default' is expanded to "basic" on unix and "basic; ntlm; negotiate; nego2" on windows.
+                                            # 'iwa' is expanded to mean "ntlm; negotiate; nego2"
+    #allowNtlmNegotiation: true   # Set to 'false' to prevent NTLM from being negotiated with the SPNEGO and SPNEGO-2 protocols.
+    #negotiateMutualAuth: false   # Set to 'true' if you require mutual authentication when the Kerberos protocol is negotiated.
+    #preemptiveAuthType: ''  # Configure the authentication mechanism to use preemptively when making a HTTP based request.
+                             # Valid values are '', 'basic', 'ntlm', 'negotiate', 'nego2'.
+                             # Set to the default value of '' to disable preemptive authentication.
+    #tcpNoDelay: true     #Set the tcpnodelay setting for non-SSL sockets created for HTTP based requests.
+                          # Valid values are 'default' 'platform default' 'true' 'false' 'active' 'inactive'
+                          # To disable tcpNoDelay use 'false' or 'inactive'
+                          # To enable tcpNoDelay use 'true' or 'active'
+                          # To use the default setting for the current platform use 'default' or 'platform default'
+    #tcpNoDelaySSL: true  #Set the tcpnodelay setting for SSL sockets created for HTTP based requests.
+                          # Valid values are 'default' 'platform default' 'true' 'false' 'active' 'inactive'
+                          # To disable tcpNoDelay use 'false' or 'inactive'
+                          # To enable tcpNoDelay use 'true' or 'active'
+                          # To use the default setting for the current platform use 'default' or 'platform default'
+    #defaultLocalAddressForBind: ''  # Set the default local address that will be used when binding newly created sockets.
+    #tcpTLSBufferSize: 32768 # Set the receive buffer size to use for TLS operations
+    #allowInsecureConnections: false # Disables certificate checking for TLS connections; use with caution!
+
+  ContentBasedFiltering:
+    #cbfEnabled: false     # Set to true to enable content-based filtering
+    #evaluationThreads: 1  # Configures the number of evaluation threads available for content-based filtering
+    #validationThreads: 1  # Configured the number of validation threads available for content-based filtering
+
+  FTEAgent:
+    #coordinationQMgr: '' # Set to the name of the coordination Queue Manager to be used by the embedded FTE Agent if not using the default Queue Manager as the coordination Queue Manager.
+
+  ParserManager:
+    #parserWarningThreshold: 1000   # Sets the frequency, based on parsers per thread, with which a parser creation warning message is written to activity log
+    #fieldWarningThreshold: 100000  # Sets the frequency, based on fields per parser, with which a field creation warning message is written to activity log
+    #freeMasterParsers: false       # Sets whether parsers will be freed after each input message has been processed.
+
+  ESQL:
+    #castWithAccurateZoneOffsets: false       # Set ESQL to use the time zones that are stored with Time, Timestamp, and Date data types when you cast to and from GMTTime and GMTTimestamp data types.
+    #alwaysCastToLocal: true                  # Set ESQL to convert the specified time into the local time zone of the integration node/server when a String is cast to a Time or TimeStamp with a Format.
+    #useICUStringManipulation: false          # Set ESQL to provide full support for UTF-16 surrogate pairs.
+    #allowPropagateWithSharedLockHeld: false  # Set ESQL to propagate the message even if a lock is held on a shared variable.
+    #performanceStatsReportingOn: false       # Set ESQL to capture performance statistics
+    #performanceStatsOutputPath: ''           # Sets the path that ESQL performance statistics are captured to
+
+  XMLNSC:
+    #invalidCharacterEscapeType: none  # Sets the way XMLNSC serialization renders characters that do not exist in the target code page. Choose one of none|hex|decimal|unicode
+                                       # The value of none will throw an exception for an invalid character.
+                                       # Choosing hex|decimal|unicode will write the character either in hex, decimal or unicode character entity format.
+    #storeTimeZoneInValue: true        # Sets XMLNSC parsers to store timezone information as part of the Datetime value that is parsed.
+    #writeTimeZone: whenSet            # Sets XMLNSC parsers to write timezone information when an XML document is serialized. Choose one of never|whenSet|nonUTC|nonLocal|always
+                                       # When the value of never is set timezones will not be written in the XML document.
+                                       # When the value of always is set timezones will always be written where the local timezone will be used if required.
+                                       # whenSet can be used to only write timezones if they were parsed from an XMLNSC message
+                                       # The values of nonUTC and nonLocal can be used to avoid writing timezones for local or UTC timezones.
+    #cdataFieldMerging: false          # Sets XMLNSC parsers to represent CDATA sections in one message tree field.
+
+  JSON:
+    #escapeMode: strict  # Specifies whether the JSON parser escapes forward slash characters when it is serializing a message tree. Choose one of preserveForwardSlashes|strict. Default is strict if unset.
+                         # To specify that the JSON parser must leave forward slashes unchanged in the output, set the value to preserveForwardSlashes.
+    #allowScientificNotation: true  # Specifies whether the JSON parser serializes numerical values using scientific notation (for example 1.10E+1). Default is true if unset.
+                                    # To specify that the JSON parser should use scientific notation set the value to true
+                                    # To specify that the JSON parser should use decimal notation set the value to false
+    #disableSchemaLookupExceptionWhen: '' # Comma-separated list of events that will not throw exceptions when validation is requested of the JSON parser and a JSON schema cannot be loaded.
+                                          # When an event in the list occurs, no exception will be thrown and instead the JSON parser will continue to parse but without validation.
+                                          # Valid events are 'notSpecified', 'notFound'. If unset will default to '' which means that no exceptions are disabled.
+                                          #  'notSpecified' disables the BIP5736 exception that is thrown if a JSON schema name is not supplied.
+                                          #  'notFound' disables the range of exceptions (BIP1318, BIP1312, BIP5737, BIP5738, BIP5739) that are thrown if a JSON schema name is supplied, but cannot be resolved.
+                                          # This option is available to allow behaviour from previous releases to be maintained.
+
+  MQConnectionManager:
+    #enableBrowseForAllInputQueues: false  # Sets the MQOO_BROWSE open option when all input queues are opened.
+    #expiryCompensation: false             # Set to true to reduce the MQOutput MQPUT MQMD.Expiry by the amount of message flow processing time.
+    #useIsolatedBindings: false            # Sets the MQCNO_ISOLATED_BINDING connection option when the MQ connection is created.
+    #queueCacheMaxSize: 10                 # Sets the maximum number of a queue handles that a message flow thread can maintain.
+    #queueCacheTimeout: 300                # Sets the time (in seconds) that a freed queue handle will stay cached until it removed from the cache.
+    #queueMaxTimeout: 60                   # Sets the maximum time (in seconds) that an MQ handle is idle before it is considered for closing.
+
+  XPathCache:
+    #minimumSize: 6000            # controls the minimum number of compiled XPath expressions that can be stored in the XPath cache.
+    #maximumSize: 10000           # controls the maximum number of compiled XPath expressions that can be stored in the XPath cache
+    #entryWarningThreshold: 1000  # controls how frequently activity log messages are emitted by the XPath cache as it grows in size.
+    #mode: true                   # Set to false to disable XPath caching
+
+  AsyncHandleManager:
+    #asyncHandleTimeoutSeconds: -1  # Sets the expiry time (in seconds) when the reply identifiers expire for asynchronous handles used for HTTP, SOAP, SAP and Callable flow nodes.
+
+  GlobalCache:
+    #cacheOn: false                     # Set to true to enable Global Cache functionality
+                                        # When using Global Cache it is advisable to change your jvmMinHeapSize and jvmMaxHeapSize depending on
+                                        # the number of live objects in the heap, complexity of live objects in the heap and number of available cores.
+                                        # see https://www.ibm.com/support/knowledgecenter/SSTVLU_8.6.0/com.ibm.websphere.extremescale.doc/cxsjvmtune.html
+    #cacheServerName: ''                # The name of this cache server component (a cache server component can be a catalog and/or a container); it must be unique in your global cache system
+    #catalogServiceEndPoints: ''        # Comma-separated list of hostnames and ports for the catalog servers to use, e.g. 'localhost:2800'
+    #catalogDomainName: ''              # Name of the shared global cache domain; this value should be shared by all catalog servers in the same domain, e.g. 'WMB_MyCacheDomain'
+    #catalogClusterEndPoints: ''        # Comma-separated list of catalog server connection details in the format 'cacheServerName:catalogCacheServerHost:HAPort:clientPort'
+                                        # If this is a catalog server, cacheServerName should match the value above, and if not, it will be the value used on the integration server hosting it
+                                        # The list should be in the same order for all catalog and container servers which are interacting together in the same domain
+    #clientsDefaultToSSL: false         # Set to true to enable SSL for any client connections to the cache servers
+    #deploymentPolicyCustomFile: ''     # Override the deployment policy file (default is '<install directory>/server/cachesupport/config/deployment.xml')
+    #enableCatalogService: false        # Set to true to launch a catalog service cache server component in this integration server
+    #enableContainerService: false      # Set to true to launch a container service cache server component in this integration server
+    #enableJMX: true                    # Allow admin access to this container service via JMX
+    #listenerHost: ''                   # Comma-separated list of hostnames for this cacheServer component, e.g. 'localhost,myserver.mycompany.com'
+    #listenerPort: 0                    # Port number this cache server listens on; it must be unique on this machine
+                                        # Four consecutive ports are assigned, e.g. 2800 for catalogCacheServerListenerPort, 2801 for clientPort, 2802 for JMXServicePort, 2803 for HAPort
+    #objectGridCustomFile: ''           # Override the ObjectGrid file (default is '<install directory>/server/cachesupport/config/objectgrid_xio.xml')
+    #overrideTraceSpec: ''              # Set a trace level for the cache server components, e.g. ObjectGrid*=event=enabled
+    #sslAlias: ''                       # SSL Alias to use for the cache server components
+    #sslProtocol: ''                    # SSL Protocol to use for SSL connections eg. default is "TLSv1.2"
+    #defaultCacheType: 'local'          # Should default maps created use the Global Cache functionality or a Local Cache, defaults to global
+
+  ExceptionLog:
+    #enabled: false                     # Enables logging of exceptions
+    #exceptionLog: '[iib.system-common-log-dir]/[iib.system-node-label].[iib-system-server-label].exceptionLog.txt' # The location in which the rotating exception log file should be written
+                                        # This path must already exist and be writeable by the IntegrationServer process.
+    #exceptionLogFileSize: 25           # The maximum size in MB of a single file that the exception log can use.
+    #exceptionLogFileCount: 4           # The maximum number of files that the exception log can rotate through.
+    #includeFlowThreadReporter: false   # Toggles whether exception in the exception log include a flow stack and history from the flow thread reporter
+    #showNestedExceptionDetails: false  # Toggles whether nested exceptions are shown by default in the exception log
+
+  GroupDirector:
+    #managerType: default               # Controls which implementation of in memory aggregation should be used. Valid values are: default
+    #timeoutThreads: 1                  # Sets the number of threads which will process timed-out groups per set of group nodes
+    #timeoutInterval: 100               # Sets the duration in milliseconds between the end of one timeout processing run and the start of the next
+    #unknownThreads: 1                  # Sets the number of threads which will process unknown messages per set of group nodes
+    #unknownInterval: 100               # Sets the duration in milliseconds between the end of one unknown message processing run and the start of the next
+    #maximumNumberOfGroups: -1          # Limits the total number of groups that can be active at any one time. -1 means no limit.
+    replyFormat: mixed-content          # Controls which method should be used to store messages that are received by a GroupGather node before being output
+                                        # in a GroupComplete node. Valid values are:
+                                        #     * basic - Serialize the entire message tree based on the values in the Properties parser. This was the default
+                                        #               behaviour before 11.0.0.6
+                                        #     * mixed-content - Serialize each first level child of the message root individually, using the subtree's own parser
+                                        #                       to decide what CCSID and encoding to use. This requires that each individual subtree be valid
+                                        #                       according to the rules of that parser. Subtrees that do not serialize will not be stored.
+                                        #     * toolkit - Serialize the message using the same method used by the toolkit for messages in the flow exerciser.
+                                        #                 This is capable of representing arbitrary message trees accurately but is slower.
+  MRM:
+    #messageSetLoadStrategy: onServerStart # Controls when MRM message sets are loaded into the MRM cache. Valid values are:
+                                           #  * onServerStart - The default where all MRM message sets are loaded into the MRM cache when the server is started.
+                                           #  * onFirstMessage - A message set is loaded into the MRM cache when it is first referenced by message processing.
+
+  FileNodes: 
+    #allowReadOnlyInputFiles: false # When set to true this will allow files to be processed by the FileInput node if the file has filesystem permissions set to  
+                                    # read-only for the ACE user. The parent directory must still be writeable.                                                    
+                                                              
+    #disableLocking: false  # When set to true prevents the File Nodes from obtaining operating system level locks on files before processing them. 
+                            # This can be helpful to allow files to be processed on filesystems that do not support POSIX file locking semantics. 
+                            # Note that file locking is used to prevent multiple Integration Servers or Integration Nodes from reading the same input file 
+                            # when processing from the same directory. Therefore if disableLocking is set to true the user must ensure that only a
+                            # single Integration Server reads from the specified input directory.                                                    
+                                                              
+                                                              
+    #avoidWriteLockCheck: false # When set to true bypasses the write lock check on an input file before it is processed by the FileInput node. For network     
+                                # filesystems that cache file attributes between calls this can prevent the accumulation of zero length input file in the input
+                                # directory.                                                    
+                                                              
+    #maxDirectoryDepth: 50 # The maximum depth of directory structure a FileInput or FileExists Node will traverse below the input directory. 
+                                                              
+    #rootDirectory: '' # Allows a base directory to be set such that relative paths set in the FileInput or FileExists Node's directory property will be constructed
+                       # relative to this base path.      
+                                                              
+    #allowFileSystemRoot: false # When set to true will allow the FileInput or FileExists node to read and delete processed files from the root directory of the operating system.
+                                                              
+    #maxRecordLength: 104857600 # The maximum size of record that will be read by the FileInput or FileRead nodes. In the case where the Record Detection property is 
+                                # set to "Whole File" this is the maximum length of file that may be processed.
+
+ConnectorProviders:
+  #sharedConnectorIdleTimeout: 60 # length of time (in seconds) after which a ConnectorProvider connection for an idle message flow is released. The value can be greater than zero or -1 to mean a connection never times out.
+  SAPConnectorProvider:
+    #jarsURL: 'default_Path'     # Set to the absolute path containing the SAP JCo JARs.
+    #nativeLibs: 'default_Path'  # Set to the absolute path containing the SAP JCo libraries.
+    #enableStandaloneIDocParsing: false # Set to true to enable using the DataObject parser in SAP ALE IDoc mode without having adapter components deployed
+  SiebelConnectorProvider:
+    #jarsURL: 'default_Path'     # Set to the absolute path containing the Siebel JARs.
+    #nativeLibs: 'default_Path'  # Set to the absolute path containing the Siebel libraries.
+    #siebelPropertiesURL:  ''  # Set to the location of the siebel.properties file.
+  PeopleSoftConnectorProvider:
+    #jarsURL: 'default_Path'     # Set to the absolute path containing the PeopleSoft JARs.
+  JDEdwardsConnectorProvider:
+    #jarsURL: 'default_Path'     # Set to the absolute path containing the JDEdwards JARs.
+    #nativeLibs: 'default_Path'  # Set to the absolute path containing the JDEdwards libraries.
+  #WSRRConnectorProvider:    # Requires the optional WSRR component install
+    #endpointAddress: 'https://host:9443/WSRR8_0/services/WSRRCoreSDOPort'   # WSRR server endpoint url
+    #needCache: true                                                         # enable WSRR cache
+    #predefinedCacheQueries: ''                                              # semicolon-separated XPath querys to initialize WSRR cache at start-up
+    #enableCacheNotification: false                                          # enable WSRR cache notification
+    #locationJNDIBinding:  'iiop://host:2809'                                # WSRR cache WAS JMS provider JNDI bindings url
+  #MyCustomProvider:
+    #connectorClassName: 'com.company.connector.hyper.LoopConnectorFactory'
+    #jarsURL: 'installation_directory/runtime/LoopConnector' # absolute path
+    #nativeLibs: 'default_Path' # absolute path or special value "default_Path"
+
+BusinessTransactionDefinitions:
+  #BusinessTransactionDefinitionTemplate:
+    #policy: '{PolicyProject}:BTDPolicy' # The fully qualified name of the BusinessTransactionDefinition Policy
+    #store: 'BTMDataStore'           # The name of the DataStore this BusinessTransactionDefinition will use to propagate events.
+    #enabled: true                   # Set to true to enable this BusinessTransactionDefinition.
+
+# Record and Replay requires a default queue manager to be associated with the integration server.
+RecordReplay:
+  #recordReplayEnabled: true           # Set to true to enable all Record and Replay functionality. Default is true.
+  Stores:
+    # Copy and customize the StoreTemplate section for each Record and Replay store that you want to create.
+    # Rename the section title 'StoreTemplate' to be the name of your Record and Replay store. This name must be unique.
+    #StoreTemplate:
+      #dataSource: ''                    # The ODBC data source name (DSN) that is used to connect to the database that stores the recorded data. This property is mandatory and has no default value.
+      #schema: ''                        # The schema name that owns the database tables that are used for storing recorded data. This property has no default value. If no value is set, either the default database schema is used (if there is one), or no schema is used, depending on the database.
+      #storeMode: 'all'                  # The mode for the store to operate in. Valid values are record, view, and all. Default is all.
+      #queue: 'SYSTEM.BROKER.DC.RECORD'  # The name of the queue to which event messages will be published before being recorded to the database. The queue must exist.
+                                         # Default is SYSTEM.BROKER.DC.RECORD. The queue SYSTEM.BROKER.DC.RECORD must be created manually if you use Record and Replay. The same queue can be specified for multiple Record and Replay stores.
+                                         # Change the value of this property to distribute the data from multiple sources across multiple queues.
+      #backoutQueue: 'SYSTEM.BROKER.DC.BACKOUT'  # The name of the backout queue used by the recorder. Messages that cannot be processed (for example, because the specified database does not exist) are sent to this queue.
+                                                 # Default is SYSTEM.BROKER.DC.BACKOUT. The queue SYSTEM.BROKER.DC.BACKOUT must be created manually if you use Record and Replay. If a data capture source refers to this data capture store, and no backoutQueue has been specified, an error occurs. The same backoutQueue can be specified for multiple Record and Replay stores.
+      #useCoordinatedTransaction: false  # Specifies whether recorder transactions are globally coordinated across IBM MQ and database resources. Default is false.
+      #commitCount: 10                   # The number of input messages that are processed on a recorder thread before a sync point is taken. Default is 10.
+      #threadPoolSize: 10                # The number of threads that are used by the recorder to process the monitoring topic subscriptions. Default is 10.
+      #commitIntervalSecs: 5             # The time interval (in seconds) at which a commit is taken, if the commitCount property is greater than 1 but the number of messages processed has not reached the value of the commitCount property. Default is 5.
+    # Like the StoreTemplate, copy, configure and rename the BTMDataStore section for each Record and Replay store you want to use to process Business Transaction Monitoring (BTM) Events.
+    #BTMDataStore:
+      #dataSource: ''
+      #schema: ''
+      #storeMode: 'all'
+      #queue: 'SYSTEM.BROKER.DC.RECORD'
+      #backoutQueue: 'SYSTEM.BROKER.DC.BACKOUT'
+      #useCoordinatedTransaction: false
+      #commitCount: 10
+      #threadPoolSize: 10
+      #commitIntervalSecs: 5
+  Sources:
+    # Copy and customize the SourceTemplate section for each Record and Replay source that you want to create.
+    # Rename the section title 'SourceTemplate' to be the name of your Record and Replay source. This name must be unique.
+    # If you have set 'eventFormat: MonitoringEventV2' for monitoring events, the value of the topic property takes the form: $SYS/Broker/integration_server/Monitoring/integrationServer/application/library/msgFlow ,where integrationServer, application, library, and msgFlow represent the names of your integration server, application, library, and message flow. The library name is optional and will be required only if the message flow is inside a library.
+    # If you have set 'eventFormat: WMB' for monitoring events, the value of the topic property takes the form: $SYS/Broker/integration_server/Monitoring/integrationServer/msgFlow, where integrationServer, and msgFlow represent the names of your integration server, and message flow.
+    # You can use wildcards in the topic property; for more information about using wildcards in topic strings, see "Special characters in topics" topic in the Knowledge Center.
+    # A durable subscription is created for each source and is created with a subid of IntegrationServer:[servername]:[sourcename]. If multiple independent integration servers share the same queue manager, you must ensure that there is no clash in server and source name.
+    # If you delete a source, you must manually delete the durable subscription for that source to avoid messages being published to the Record and Replay store's queue.
+    #SourceTemplate:
+      #topic: '$SYS/Broker/integration_server/Monitoring/[servername]/[applicationname]/[flowname]'  # Sets the monitoring event topic string that is used when record and replay subscribes to monitoring events, see above.
+      #store: 'StoreTemplate' # The Record and Replay store that is used to configure record and replay for the message flows specified in the topic property. Multiple instances of Record and Replay source can refer to one instance of a Record and Replay store.
+
+  Destinations:
+    # Copy and customize the MQDestinationTemplate section for each Record and Replay destination that you want to create.
+    # Rename the section title 'MQDestinationTemplate' to be the name of your Record and Replay destination. This name must be unique.
+    # For destinations of type WMQDestination, the value of the property takes the form: wmq:/msg/queue/queueName@queueManagerName, where queueName identifies the destination queue and queueManagerName identifies the queue manager that owns the queue. The queue manager name is optional, with the default queue manager (local or remote) being used if it is not specified. Only local queue managers can be specified by name.
+    #MQDestinationTemplate:
+      #endpointType: 'WMQDestination'             # The type of the target destination to which messages will be replayed. The default is WMQDestination, which is the only valid value.
+      #endpoint: 'wmq:/msg/queue/[QUEUE]@[QMGR]'  # The destination to which you want to replay data. This property is mandatory. The default value is wmq:/msg/queue/[QUEUE]@[QMGR]. You must replace [QUEUE] and [QMGR] with the names of your queue and queue manager, or leave the queue manager unspecified (wmq:/msg/queue/[QUEUE]) to use the default queue manager (local or remote).
+
+Credentials:
+  ServerCredentials:
+    # Optionally define credentials for use by the Integration Server.
+    # Customize the CredentialType section for each type of credential that you want to create credentials for.
+    # You must define each CredentialType at most once.
+    # Each CredentialName must be unique within the CredentialType.
+    # Each CredentialType has a set of allowable properties which are a subset of username, password, passphrase, apiKey, clientId, clientSecret, sshIdentityFile.
+    # For full details of allowed CredentialTypes and their properties, refer to the Knowledge Center.
+    # For example:
+    # jdbc:
+    #   USERDB:
+    #     username: 'user1'
+    #     password: 'myPassw0rd'
+    #   OTHERDB:
+    #     username: 'user2'
+    #     password: 'myOtherPassw0rd'
+    # rest:
+    #   endpoint1:
+    #     username: 'user1'
+    #     password: 'myPassw0rd'
+    #     apiKey: 'anApiKeyWhichMightBeALongOne'
+    #
+    #CredentialType:
+      #CredentialName:
+        #property: 'value'
+        #property2: 'value2'
+
+  ExternalCredentialsProviders:
+    # Optionally define external credentials providers that are invoked on startup to load credentials for use by the Integration Server.
+    # Copy and customize the ExternalProviderTemplate section for each external credential provider that you want to invoke.
+    # Rename the section title 'ExternalProviderTemplate' to be the name of your external credential provider. This name must be unique.
+    # Configure the loadAllCredentialsCommand to be the command, including arguments, that should be run to retrieve and return any credentials to be loaded.
+    # The command can include environment variables and keywords that are replaced before execution to provide context specific configuration such as , [iib.system-work-dir], [iib.system-server-label]. Environment variables are replaced before keywords.
+    # The command that is executed must output a stream of bytes to stdout that represent the credentials to be loaded in the configured format, either xml, json, or yaml, and in the configured codepage.
+    # The command must return 0 when executing successfully, any other return value results in an error being reported and the returned output not being processed.
+    # The properties loadAllCredentialsDirectErrorToCommandOutput and loadAllCredentialsIncludeCommandOutputInLogs are present for debugging and loadAllCredentialsIncludeCommandOutputInLogs should not be permanently set in production as it could result in credentials being leaked into logs.
+    # When set to true the property loadAllCredentialsDirectErrorToCommandOutput results in " 2>&1" being appended to the command before execution so that stderr is redirected to the stdout stream. When set to false stderr ends up in the integration server stderr stream.
+    #ExternalProviderTemplate:
+      #loadAllCredentialsCommand: ''
+      #loadAllCredentialsFormat: 'json'  # Format of the output returned by the command, Valid values are xml, json, or yaml. Default is json.
+      #loadAllCredentialsCodepage: 1208  # Codepage of the output returned by the command. 0 means use the local codepage. Default is 1208.
+      #loadAllCredentialsDirectErrorToCommandOutput: true   # Specify whether the stderr output of the command should be redirected to the stdout stream and read by the integration server. Default is true.
+      #loadAllCredentialsIncludeCommandOutputInLogs: false  # Specify whether the output from the command should appear in log and user trace messages. Default is false.
+      #loadAllCredentialsStopServerOnError: true            # Specify whether the server should stop if the command returns a non-zero exit code.  Default is true.
+
+StartupScripts:
+  # Optionally run scripts during server startup. These scripts can optionally return YANL to set environment and user variables in the server itself.
+  # The optional return YAML format should start with the standard "---" as the first line (which is detected by the server with the default "auto"
+  # setting below); the content should be the "UserVariables" or "EnvironmentVariables" stanzas from this file (see below for examples), or else the
+  # Kubernetes standard "env" format:
+  #
+  # ---
+  # env:
+  # - name: 'test1'
+  #   value: 'test1value'
+  # UserVariables:
+  #   user-var-one: 'uservalueone'
+  # EnvironmentVariables:
+  #   env-var-one: 'envvalueone'
+  #
+  #FirstScript:
+    #command: '/path/to/startup-script.sh'
+    #readVariablesFromOutput: 'auto'        # Controls whether the server reads environment and user variables from the script output; Possible values are 'true', 'false', and 'auto' (default).
+    #directErrorToCommandOutput: false      # Specify whether the stderr output of the command should be redirected to the stdout stream and read by the integration server. Default is false.
+    #includeCommandOutputInLogs: true       # Specify whether the output from the command should appear in log and user trace messages. Default is true.
+    #stopServerOnError: true                # Specify whether the server should stop if the script returns a non-zero exit code.  Default is true.
+
+ELKConnections:
+  # Description for ELK Connections.
+  # elkConnection1:
+  #   elkProtocol: 'beats'                       # Logstash input protocol. Valid values are: 'beats', 'beatsTls', 'http', or 'https'.
+  #   hostname: 'myhost.domain.com'              # Hostname for the elkProtocol endpoint.
+  #   port: 0                                    # Port for the elkProtocol endpoint.
+  #   uploadIntervalMilliSecs: 60000             # Interval between uploading cached data, set in milliseconds.
+  #   elkCredential: ''                          # Set an 'elk' credential alias name to enable basic authentication, if it is required by the Logstash input protocol.
+  #   keystoreFile: '/path/to/keystore.jks'      # Set the path to the keystore to be used, if it is required by the Logstash input protocol.
+  #   keystorePass: 'P4s5w0rd'                   # Set the password, or 'keystore' credential alias to the password, of the keystore.
+  #   keyAlias: ''                               # Set the alias name of the private key, if mutual authentication is required by the Logstash input protocol.
+  #   keyPass: ''                                # Set the password, or 'keystorekey' credential alias to the password, for accessing the private mutual authentication key.
+  #   truststoreFile: '/path/tp/truststore.jks'  # Set the path to the truststore to be used, if it is required by the Logstash input protocol.
+  #   truststorePass: 'P4s5w0rd'                 # Set the password, or 'truststore' credential alias to the password, for accessing the truststore.
+
+EnvironmentVariables:
+  #ENV_VAR_ONE: 'env_var_one_value'
+
+UserVariables:
+  #Thing1: 'value'
