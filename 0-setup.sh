@@ -24,8 +24,8 @@ then
     exit
 fi
 
-print_bold "creating namespace to run pipelines in"
-oc create namespace pipeline-ace --dry-run=client -o yaml | oc apply -f -
+print_bold "creating namespace (if needed) to run pipelines in"
+oc get namespace pipeline-ace || ( oc create namespace pipeline-ace --dry-run=client -o yaml | oc apply -f - )
 
 print_bold "storing github credentials for cloning the repo from a pipeline"
 oc apply -n pipeline-ace -f ./github-credentials.yaml
