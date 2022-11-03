@@ -94,4 +94,5 @@ spec:
 
         echo "running tests"
         IntegrationServer --work-dir $TEST_SERVER \
-          --test-project $(params.test-project-name)
+          --test-project $(params.test-project-name) \
+          --start-msgflows false 
