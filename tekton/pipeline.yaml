@@ -520,6 +520,14 @@ spec:
           value: "$(params.serverconf-name)"
         - name: truststore-configuration
           value: "$(params.truststore-name)"
+      when:
+        # --------------------------------------------------------------
+        #  Don't run if the preceding tasks have failed
+        # --------------------------------------------------------------
+        - input: "$(tasks.status)"
+          operator: notin
+          values:
+            - "Failed"
       workspaces:
         - name: output
           workspace: pipeline-shared-workspace
