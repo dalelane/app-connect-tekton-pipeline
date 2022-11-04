@@ -225,6 +225,30 @@ To run the pipeline for your own application, you need to first create a `Pipeli
 
 The sample pipeline runs described above provide a good starting point for this, which you can modify to your own needs. You need to specify the location of your App Connect Enterprise application code and configuration resources. All of the available parameters are documented in the [pipeline spec](./tekton/pipeline.yaml#L20-L199) if further guidance is needed.
 
+### Accessing Git using credentials
+
+If your App Connect Enterprise files are in a git repository that requires authentication to access, you will also need to provide credentials for the pipeline to be able to clone your repository.
+
+Create a file called `github-credentials.yaml` (in the same folder as the `0-setup.sh` script)
+
+It should look like this:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: github-credentials
+  annotations:
+    tekton.dev/git-0: https://github.com
+type: kubernetes.io/basic-auth
+stringData:
+  username: your-user-name
+  password: your-github-token
+```
+
+You can alter the github URL if your Git repository is somewhere different (e.g. GitHub Enterprise).
+
+If your Git repository is publically readable, you can skip this step.
 
 ## Supported versions
 

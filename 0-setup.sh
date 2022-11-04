@@ -23,15 +23,30 @@ then
     echo "ERROR!      brew install openshift-cli"
     exit
 fi
+print_bold "checking for IBM entitlement key env var"
+if [[ -z "$IBM_ENTITLEMENT_KEY" ]]; then
+    echo "You must set an IBM_ENTITLEMENT_KEY environment variable" 1>&2
+    echo "This is needed to pull the container images used by the pipeline" 1>&2
+    echo "Create your entitlement key at https://myibm.ibm.com/products-services/containerlibrary" 1>&2
+    echo "Set it like this:" 1>&2
+    echo " export IBM_ENTITLEMENT_KEY=..." 1>&2
+    exit 1
+fi
 
 print_bold "creating namespace to run pipelines in"
 oc create namespace pipeline-ace --dry-run=client -o yaml | oc apply -f -
 
-print_bold "storing github credentials for cloning the repo from a pipeline"
-oc apply -n pipeline-ace -f ./github-credentials.yaml
+print_bold "checking for github credentials for cloning the repo from a pipeline"
+if test -f "github-credentials.yaml"; then
+    oc apply -n pipeline-ace -f ./github-credentials.yaml
+fi
 
-print_bold "storing docker credentials for pulling image for BAR file builder"
-oc apply -n pipeline-ace -f ./ibm-entitlement-key.yaml
+print_bold "storing docker credentials for pulling image for BAR file builder and tester"
+oc create secret docker-registry ibm-entitlement-key \
+    --docker-username=cp \
+    --docker-password=$IBM_ENTITLEMENT_KEY \
+    --docker-server=cp.icr.io \
+    --namespace=pipeline-ace --dry-run=client -o yaml | oc apply -f -
 
 print_bold "creating service account to run the pipelines as"
 oc apply -n pipeline-ace -f ./tekton/permissions/serviceaccount.yaml
